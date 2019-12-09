@@ -1,8 +1,15 @@
 package trinity
 
-import "time"
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"os"
+	"time"
 
-import "fmt"
+	"github.com/gin-gonic/gin"
+)
 
 var (
 	//DefaultLogger set default logger
@@ -28,6 +35,10 @@ type LogFormat struct {
 	ErrorDetail    string        `json:"error_detail"` // error detail info
 	BodySize       int           `json:"body_size"`
 	UID            string        `json:"uid"`
+	// db log
+	SQLFunc    string `json:"sqlfunc"`
+	SQL        string `json:"sql"`
+	EffectRows int    `json:"effectrows"`
 }
 
 // Logger to record log
@@ -36,7 +47,75 @@ type Logger interface {
 }
 
 // defaultLogger: default logger
-type defaultLogger struct{}
+type defaultLogger struct {
+}
+
+// defaultLogger: default logger
+type defaultViewRuntimeLogger struct {
+	ViewRuntime *ViewSetRunTime
+}
+
+//CustomizeLogFormatter for customize log format
+func CustomizeLogFormatter(params LogFormatterParams) string {
+	l := LogFormat{
+		Timestamp:      params.TimeStamp.Format(time.RFC3339),
+		Version:        DefaultAppVersion,
+		Message:        params.ErrorMessage,
+		LoggerName:     "",
+		ThreadName:     "",
+		Level:          "",
+		Hostname:       "hostname",
+		ModuleName:     DefaultProjectName,
+		TraceID:        params.TraceID,
+		Latency:        params.Latency,
+		ClientIP:       params.ClientIP,
+		HTTPMethod:     params.Method,
+		HTTPPath:       params.Path,
+		HTTPStatusCode: params.StatusCode,
+		BodySize:       params.BodySize,
+		UID:            params.UserID,
+		ErrorDetail:    params.ErrorDetail,
+		SQLFunc:        params.SQLFunc,
+		SQL:            params.SQL,
+		EffectRows:     params.EffectRows,
+	}
+	b, _ := json.Marshal(l)
+	return string(b)
+
+}
+
+// InitLogger initial logger
+func (t *Trinity) InitLogger() {
+	gin.SetMode(t.Setting.Log.GinMode)
+	runmode := gin.Mode()
+	if runmode == "release" {
+		if !CheckFileIsExist(t.Setting.Log.LogRootPath) {
+			if err := os.MkdirAll(t.Setting.Log.LogRootPath, 770); err != nil {
+				log.Fatalln("create log root path error：", err)
+			}
+		}
+		var gFile *os.File
+		var err error
+		logfile := GetLogFilePath(t.Setting.Log.LogRootPath, t.Setting.Log.LogName)
+		if CheckFileIsExist(logfile) {
+			gFile, err = os.OpenFile(logfile, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
+			if err != nil {
+				log.Fatalln("open log error：", err)
+			}
+
+		} else {
+			gFile, err = os.Create(logfile)
+			if err != nil {
+				log.Fatalln("create log error：", err)
+			}
+		}
+		gin.DefaultWriter = io.MultiWriter(gFile)
+
+	} else {
+		gin.DefaultWriter = io.MultiWriter(os.Stderr)
+	}
+	t.Logger = &defaultLogger{}
+}
 
 // LogWriter log
 func (l *defaultLogger) Print(v ...interface{}) {
@@ -44,4 +123,44 @@ func (l *defaultLogger) Print(v ...interface{}) {
 	for _, m := range v {
 		fmt.Println(m)
 	}
+}
+
+// DbLoggerFormatter format gorm db log
+func DbLoggerFormatter(r *ViewSetRunTime, v ...interface{}) {
+	dblogLevel, _ := v[0].(string)
+	if dblogLevel == "sql" {
+		sqlfunc, _ := v[1].(string)
+		sql, _ := v[3].(string)
+		effectRows, _ := v[5].(int)
+		l := LogFormat{
+			Timestamp: time.Now().Format(time.RFC3339),
+			Version:   DefaultAppVersion,
+			// Message:        params.ErrorMessage,
+			LoggerName: "",
+			ThreadName: "",
+			Level:      "",
+			Hostname:   "hostname",
+			ModuleName: DefaultProjectName,
+			TraceID:    r.TraceID,
+			// Latency:        params.Latency,
+			ClientIP:       r.Gcontext.ClientIP(),
+			HTTPMethod:     r.Gcontext.Request.Method,
+			HTTPPath:       r.Gcontext.Request.URL.RequestURI(),
+			HTTPStatusCode: r.Gcontext.Writer.Status(),
+			BodySize:       r.Gcontext.Writer.Size(),
+			UID:            r.Gcontext.GetString("UserID"),
+			ErrorDetail:    r.Gcontext.GetString("ErrorDetail"),
+			SQLFunc:        sqlfunc,
+			SQL:            sql,
+			EffectRows:     effectRows,
+		}
+		b, _ := json.Marshal(l)
+		fmt.Fprintln(gin.DefaultWriter, string(b))
+	}
+
+}
+
+// LogWriter log
+func (l *defaultViewRuntimeLogger) Print(v ...interface{}) {
+	DbLoggerFormatter(l.ViewRuntime, v...)
 }

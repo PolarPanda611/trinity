@@ -1,7 +1,6 @@
 package trinity
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -55,36 +54,15 @@ type LogFormatterParams struct {
 	UserID string
 	// request TraceID unique
 	TraceID string
+
+	// db log
+	SQLFunc    string `json:"sqlfunc"`
+	SQL        string `json:"sql"`
+	EffectRows int    `json:"effectrows"`
 }
 
 // LogFormatter gives the signature of the formatter function passed to LoggerWithFormatter
 type LogFormatter func(params LogFormatterParams) string
-
-//CustomizeLogFormatter for customize log format
-func CustomizeLogFormatter(params LogFormatterParams) string {
-	l := LogFormat{
-		Timestamp:      params.TimeStamp.Format(time.RFC3339),
-		Version:        DefaultAppVersion,
-		Message:        params.ErrorMessage,
-		LoggerName:     "",
-		ThreadName:     "",
-		Level:          "",
-		Hostname:       "hostname",
-		ModuleName:     DefaultProjectName,
-		TraceID:        params.TraceID,
-		Latency:        params.Latency,
-		ClientIP:       params.ClientIP,
-		HTTPMethod:     params.Method,
-		HTTPPath:       params.Path,
-		HTTPStatusCode: params.StatusCode,
-		BodySize:       params.BodySize,
-		UID:            params.UserID,
-		ErrorDetail:    params.ErrorDetail,
-	}
-	b, _ := json.Marshal(l)
-	return string(b)
-
-}
 
 // LoggerWithConfig instance a Logger middleware with config.
 func LoggerWithConfig(conf LoggerConfig) gin.HandlerFunc {
@@ -126,7 +104,7 @@ func LoggerWithConfig(conf LoggerConfig) gin.HandlerFunc {
 		param.TraceID = c.GetString("TraceID")
 		param.Path = raw
 		param.ErrorDetail = c.GetString("ErrorDetail")
-		fmt.Fprint(out, formatter(param))
+		fmt.Fprintln(out, formatter(param))
 
 	}
 }

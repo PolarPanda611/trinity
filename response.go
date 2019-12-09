@@ -11,7 +11,7 @@ type ResponseData struct {
 func (v *ViewSetRunTime) Response() {
 	var res ResponseData
 	res.Status = v.Status
-	res.TraceID = v.Gcontext.GetString("TraceID")
+	res.TraceID = v.TraceID
 	if v.RealError != nil {
 		// v.Cfg.Logger.LogWriter(v)
 		v.Gcontext.Error(v.RealError)

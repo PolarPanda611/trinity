@@ -9,8 +9,9 @@ import (
 
 // ViewSetRunTime : put runtime data
 type ViewSetRunTime struct {
-	mu     sync.Mutex
-	Method string
+	mu      sync.Mutex
+	TraceID string
+	Method  string
 	// gin.context
 	Gcontext *gin.Context
 	// db instance
@@ -45,6 +46,7 @@ type ViewSetRunTime struct {
 	Patch                 func(r *ViewSetRunTime)
 	Delete                func(r *ViewSetRunTime)
 	Cfg                   *ViewSetCfg
+	DBLogger              Logger
 
 	//response handle
 	Status    int

@@ -15,7 +15,7 @@ p.s: django restframework like :)
 * 集成gorm
 * 集成gin
 * 快速注册路由
-* 链路追踪，返回错误代码行数
+* 链路追踪，返回错误代码行数,及sql
 * 快速migrate表并生成权限
 * 支持快速开发rest风格api并实现增删改查，开箱即用
 * JWT token生成，认证，刷新中间件
@@ -294,6 +294,5 @@ func Response(r *ViewSetRunTime) {
 ## to do list : 
 支持字段级验证请求数据   
 外键字段过滤   
-gorm日志链路追踪   
 
 

@@ -9,10 +9,9 @@ import (
 	"github.com/swaggo/gin-swagger/swaggerFiles"
 )
 
-// NewRouter initial router
-func (t *Trinity) NewRouter() {
+// InitRouter initial router
+func (t *Trinity) InitRouter() {
 	// Creates a router without any middleware by default
-	gin.SetMode(t.Setting.Log.GinMode)
 	r := gin.New()
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     t.Setting.Security.Cors.AllowOrigins,

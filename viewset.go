@@ -81,7 +81,8 @@ func (v *ViewSetCfg) clone() *ViewSetCfg {
 
 // NewViewSet new api viewset
 func NewViewSet() *ViewSetCfg {
-	return GlobalTrinity.vCfg.clone()
+	v := GlobalTrinity.vCfg.clone()
+	return v
 }
 
 // NewRunTime : new the run time with the default config
@@ -98,8 +99,9 @@ func (v *ViewSetCfg) NewRunTime(c *gin.Context, ResourceModel interface{}, Model
 			"DELETE":   []string{"system.delete." + resourceName},
 		}
 	}
-	return &ViewSetRunTime{
+	vRun := &ViewSetRunTime{
 		Gcontext:              c,
+		TraceID:               c.GetString("TraceID"),
 		Db:                    v.Db,
 		Method:                httpMethod,
 		ResourceModel:         ResourceModel,
@@ -126,6 +128,9 @@ func (v *ViewSetCfg) NewRunTime(c *gin.Context, ResourceModel interface{}, Model
 		Delete:                v.Delete,
 		Cfg:                   v,
 	}
+	vRun.DBLogger = &defaultViewRuntimeLogger{ViewRuntime: vRun}
+	vRun.Db.SetLogger(vRun.DBLogger)
+	return vRun
 }
 
 // ViewSetServe for viewset handle

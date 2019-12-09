@@ -60,16 +60,16 @@ func (t *Trinity) initDefaultValue() {
 
 // New app
 func New(runMode string) *Trinity {
-	logger := &defaultLogger{}
 	t := &Trinity{
 		RunMode: runMode,
-		Logger:  logger,
 	}
 	t.Lock()
+
 	t.LoadSetting()
+	t.InitLogger()
 	t.InitDatabase()
 	t.initDefaultValue()
-	t.NewRouter()
+	t.InitRouter()
 	t.InitViewSetCfg()
 	t.migrate()
 	v1 := t.NewAPIGroup("/api/v1")

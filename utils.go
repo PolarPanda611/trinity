@@ -3,6 +3,8 @@ package trinity
 import (
 	"encoding/json"
 	"errors"
+	"os"
+	"path/filepath"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -11,6 +13,25 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 )
+
+// CheckFileIsExist : check file if exist ,exist -> true , not exist -> false  ,
+/**
+ * @param filename string ,the file name need to check
+ * @return boolean string
+ */
+func CheckFileIsExist(filename string) bool {
+	var exist = true
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		exist = false
+	}
+	return exist
+}
+
+// GetLogFilePath Initial Log File
+func GetLogFilePath(rootpath string, fileName string) string {
+	return filepath.Join(rootpath, fileName)
+
+}
 
 // GetRequestType to get http request type with restful style
 func GetRequestType(c *gin.Context) string {
@@ -307,12 +328,11 @@ func RecordErrorLevelTwo() (uintptr, string, int) {
 	return funcName, file, line
 }
 
-
 // Getparentdirectory : get parent directory of the path ,
 /*
  * @param path string  ,the path you want to get parent directory
  * @return string  , the parent directory you need
  */
- func Getparentdirectory(path string, level int) string {
+func Getparentdirectory(path string, level int) string {
 	return strings.Join(strings.Split(path, "/")[0:len(strings.Split(path, "/"))-level], "/")
 }
