@@ -1,0 +1,3 @@
+CREATE USER trinity WITH PASSWORD '123456';
+CREATE DATABASE trinity OWNER trinity encoding='UTF8';
+GRANT ALL PRIVILEGES ON DATABASE trinity to trinity;
