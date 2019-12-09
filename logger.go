@@ -131,6 +131,7 @@ func DbLoggerFormatter(r *ViewSetRunTime, v ...interface{}) {
 		sqlfunc, _ := v[1].(string)
 		sql, _ := v[3].(string)
 		effectRows, _ := v[5].(int)
+		// sqldata := v[4]
 		l := LogFormat{
 			Timestamp: time.Now().Format(time.RFC3339),
 			Version:   DefaultAppVersion,
