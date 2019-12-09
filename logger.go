@@ -120,9 +120,8 @@ func (t *Trinity) InitLogger() {
 // LogWriter log
 func (l *defaultLogger) Print(v ...interface{}) {
 	//customie logger
-	for _, m := range v {
-		fmt.Println(m)
-	}
+	fmt.Println(v...)
+
 }
 
 // DbLoggerFormatter format gorm db log

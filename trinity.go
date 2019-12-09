@@ -95,12 +95,12 @@ func (t *Trinity) Serve() error {
 		IdleTimeout:       time.Duration(t.Setting.Webapp.IdleTimeoutSecond) * time.Second,
 		MaxHeaderBytes:    t.Setting.Webapp.MaxHeaderBytes,
 	}
-	t.Logger.Print("[info] %v start http server listening : %v , version : %v ", time.Now().Format(time.RFC3339), t.Setting.Webapp.Port, t.Setting.Version)
+	t.Logger.Print("[info]  " + time.Now().Format(time.RFC3339) + "  start http server listening : " + t.Setting.Webapp.Port + ", version : " + t.Setting.Version)
 	return s.ListenAndServe()
 }
 
 // Close http
 func (t *Trinity) Close() {
 	t.Db.Close()
-	t.Logger.Print("[info] %v end http server listening : %v , version : %v ", time.Now().Format(time.RFC3339), t.Setting.Webapp.Port, t.Setting.Version)
+	t.Logger.Print("[info]  " + time.Now().Format(time.RFC3339) + "  end http server listening : " + t.Setting.Webapp.Port + ", version : " + t.Setting.Version)
 }
