@@ -74,11 +74,6 @@ func New(runMode string) *Trinity {
 	t.InitRouter()
 	t.InitViewSetCfg()
 	t.migrate()
-	v1 := t.NewAPIGroup("/api/v1")
-	NewAPIInGroup(v1, "users", UserViewSet, []string{"Retrieve", "List", "Create", "Update", "Delete"})
-	NewAPIInGroup(v1, "permissions", PermissionViewSet, []string{"Retrieve", "List", "Create", "Update", "Delete"})
-	NewAPIInGroup(v1, "groups", GroupViewSet, []string{"Retrieve", "List", "Create", "Update", "Delete"})
-	NewAPIInGroup(v1, "apperrors", AppErrorViewSet, []string{"Retrieve", "List"})
 	t.Unlock()
 	return t
 }

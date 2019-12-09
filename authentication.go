@@ -97,12 +97,17 @@ func ParseUnverifiedToken(token string) (*FedidClaims, error, error) {
 	if err != nil {
 		return nil, err, ErrUnverifiedToken
 	}
-	if !claim.StandardClaims.VerifyExpiresAt(time.Now().Unix(), true) {
-		return nil, ErrTokenExpired, ErrUnverifiedToken
+	if AppSetting.Security.Authentication.JwtVerifyExpireHour {
+		if !claim.StandardClaims.VerifyExpiresAt(time.Now().Unix(), true) {
+			return nil, ErrTokenExpired, ErrUnverifiedToken
+		}
 	}
-	if !claim.StandardClaims.VerifyIssuer(DefaultJwtissuer, true) {
-		return nil, ErrTokenWrongIssuer, ErrUnverifiedToken
+	if AppSetting.Security.Authentication.JwtVerifyIssuer {
+		if !claim.StandardClaims.VerifyIssuer(DefaultJwtissuer, true) {
+			return nil, ErrTokenWrongIssuer, ErrUnverifiedToken
+		}
 	}
+
 	return &claim, nil, nil
 
 }

@@ -19,10 +19,12 @@ type Setting struct {
 	}
 	Security struct {
 		Authentication struct {
-			SecretKey       string `yaml:"secretkey"`
-			JwtIssuer       string `yaml:"jwtissuer"`
-			JwtExpireHour   int    `yaml:"jwtexpirehour"`
-			JwtHeaderPrefix string `yaml:"jwtheaderprefix"`
+			SecretKey           string `yaml:"secretkey"`
+			JwtVerifyIssuer     bool   `yaml:"jwtverifyissuer"`
+			JwtIssuer           string `yaml:"jwtissuer"`
+			JwtVerifyExpireHour bool   `yaml:"jwtverifyexpirehour"`
+			JwtExpireHour       int    `yaml:"jwtexpirehour"`
+			JwtHeaderPrefix     string `yaml:"jwtheaderprefix"`
 		}
 		Cors struct {
 			AllowOrigins     []string `yaml:"alloworigins"`
