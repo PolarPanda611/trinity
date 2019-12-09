@@ -2,7 +2,6 @@ package trinity
 
 import (
 	"encoding/json"
-	"errors"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -48,7 +47,7 @@ func CheckAccessAuthorization(requiredPermission, userPermission []string) error
 	if SliceInSlice(requiredPermission, userPermission) {
 		return nil
 	}
-	return errors.New("app.error.AccessAuthorizationCheckFailed")
+	return ErrAccessAuthCheckFailed
 }
 
 // HandleServices for multi response

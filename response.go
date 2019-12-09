@@ -1,5 +1,11 @@
 package trinity
 
+import (
+	"encoding/json"
+	"runtime"
+	"strconv"
+)
+
 // ResponseData http response
 type ResponseData struct {
 	Status  int         // the http response status  to return
@@ -13,7 +19,19 @@ func (v *ViewSetRunTime) Response() {
 	res.Status = v.Status
 	res.TraceID = v.TraceID
 	if v.RealError != nil {
+		userKey := v.Gcontext.GetString("UserID")
 		// v.Cfg.Logger.LogWriter(v)
+		e := AppError{
+			Logmodel: Logmodel{CreateUserKey: &userKey},
+			TraceID:  v.Gcontext.GetString("TraceID"),
+			File:     v.File,
+			Line:     strconv.Itoa(v.Line),
+			FuncName: runtime.FuncForPC(v.FuncName).Name(),
+			Error:    v.RealError.Error()}
+		b, _ := json.Marshal(e)
+		v.Gcontext.Set("ErrorDetail", string(b))
+		e.RecordError()
+
 		v.Gcontext.Error(v.RealError)
 		v.Gcontext.Error(v.UserError)
 		res.Result = v.UserError.Error()

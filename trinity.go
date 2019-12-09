@@ -29,6 +29,8 @@ var (
 	Db *gorm.DB
 	// GlobalTrinity global instance
 	GlobalTrinity *Trinity
+	// AppSetting Get Global setting
+	AppSetting *Setting
 )
 
 // Trinity struct for app subconfig
@@ -54,6 +56,7 @@ func (t *Trinity) initDefaultValue() {
 	// DefaultProjectName for logging middleware
 	DefaultProjectName = t.Setting.Project
 	Db = t.Db
+	AppSetting = t.Setting
 	DefaultRunMode = t.RunMode
 	GlobalTrinity = t
 }
@@ -64,7 +67,6 @@ func New(runMode string) *Trinity {
 		RunMode: runMode,
 	}
 	t.Lock()
-
 	t.LoadSetting()
 	t.InitLogger()
 	t.InitDatabase()

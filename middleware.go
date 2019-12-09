@@ -119,10 +119,10 @@ func LoggerWithFormatter() gin.HandlerFunc {
 // JWT is jwt middleware
 func JWT() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		_, err := CheckTokenValid(c)
+		_, rErr, _ := CheckTokenValid(c)
 
-		if err != nil {
-			c.AbortWithError(401, err)
+		if rErr != nil {
+			c.AbortWithError(401, rErr)
 			return
 		}
 

@@ -2,7 +2,6 @@ package trinity
 
 import (
 	"encoding/json"
-	"errors"
 	"math"
 	"strconv"
 	"time"
@@ -20,11 +19,11 @@ func GetResourceByid(r *RetrieveMixin) {
 		QueryByPreload(r.ViewSetRunTime.PreloadList),
 	).Table(r.ViewSetRunTime.Db.NewScope(r.ResourceModel).TableName()).First(r.ViewSetRunTime.ModelSerializer).Error; err != nil {
 		if gorm.IsRecordNotFoundError(err) {
-			r.ViewSetRunTime.HandleResponse(400, nil, err, errors.New("app.error.recordnotfound"))
+			r.ViewSetRunTime.HandleResponse(400, nil, err, gorm.ErrRecordNotFound)
 			return
 
 		}
-		r.ViewSetRunTime.HandleResponse(400, nil, err, errors.New("app.err.loaddatafailed"))
+		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrLoadDataFailed)
 		return
 	}
 	r.ViewSetRunTime.HandleResponse(200, r.ModelSerializer, nil, nil)
@@ -50,7 +49,7 @@ func GetResourceList(r *GetMixin) {
 			QueryByPagination(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.PageSize),
 			QueryByPreload(r.ViewSetRunTime.PreloadList),
 		).Table(r.ViewSetRunTime.Db.NewScope(r.ResourceModel).TableName()).Find(r.ViewSetRunTime.ModelSerializerlist).Limit(-1).Offset(-1).Count(&count).Error; err != nil {
-			r.ViewSetRunTime.HandleResponse(400, nil, err, errors.New("app.err.loaddatalistfailed"))
+			r.ViewSetRunTime.HandleResponse(400, nil, err, ErrLoadDataFailed)
 			return
 		}
 		currentPageNum := r.ViewSetRunTime.Gcontext.DefaultQuery("PageNum", "1")
@@ -91,7 +90,7 @@ func GetResourceList(r *GetMixin) {
 			QueryBySelect(r.ViewSetRunTime.Gcontext),
 			QueryByOrdering(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.OrderingByList),
 		).Table(r.ViewSetRunTime.Db.NewScope(r.ResourceModel).TableName()).Find(r.ViewSetRunTime.ModelSerializerlist).Error; err != nil {
-			r.ViewSetRunTime.HandleResponse(400, nil, err, errors.New("app.err.loaddatalistfailed"))
+			r.ViewSetRunTime.HandleResponse(400, nil, err, ErrLoadDataFailed)
 			return
 		}
 		r.ViewSetRunTime.HandleResponse(200, r.ViewSetRunTime.ModelSerializerlist, nil, nil)
@@ -103,11 +102,11 @@ func GetResourceList(r *GetMixin) {
 // CreateResource : Create method
 func CreateResource(r *PostMixin) {
 	if err := r.ViewSetRunTime.Gcontext.BindJSON(r.ViewSetRunTime.ModelSerializer); err != nil {
-		r.ViewSetRunTime.HandleResponse(400, nil, err, errors.New("app.err.resolvedataerror"))
+		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrResolveDataFailed)
 		return
 	}
 	if err := r.ViewSetRunTime.Db.Table(r.ViewSetRunTime.Db.NewScope(r.ResourceModel).TableName()).Create(r.ViewSetRunTime.ModelSerializer).Error; err != nil {
-		r.ViewSetRunTime.HandleResponse(400, nil, err, errors.New("app.err.createdatalistfailed"))
+		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrCreateDataFailed)
 		return
 	}
 	r.ViewSetRunTime.HandleResponse(201, r.ViewSetRunTime.ModelSerializer, nil, nil)
@@ -120,14 +119,14 @@ func PatchResource(r *PatchMixin) {
 	n, _ := r.ViewSetRunTime.Gcontext.Request.Body.Read(buf)
 	requestbodyMap := make(map[string]interface{})
 	if err := json.Unmarshal(buf[0:n], &requestbodyMap); err != nil {
-		r.ViewSetRunTime.HandleResponse(400, nil, err, errors.New("app.err.resolvedataerror"))
+		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrResolveDataFailed)
 		return
 	}
 	if err := r.ViewSetRunTime.Db.Scopes(
 		r.ViewSetRunTime.DBFilterBackend,
 		FilterByParam(r.ViewSetRunTime.Gcontext.Params.ByName("key")),
 	).Table(r.ViewSetRunTime.Db.NewScope(r.ResourceModel).TableName()).Updates(requestbodyMap).First(r.ViewSetRunTime.ModelSerializer).Error; err != nil {
-		r.ViewSetRunTime.HandleResponse(400, nil, err, errors.New("app.err.updatedatalistfailed"))
+		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrUpdateDataFailed)
 		return
 	}
 	r.ViewSetRunTime.HandleResponse(200, r.ViewSetRunTime.ModelSerializer, nil, nil)
@@ -145,7 +144,7 @@ func DeleteResource(r *DeleteMixin) {
 		r.ViewSetRunTime.DBFilterBackend,
 		FilterByParam(r.ViewSetRunTime.Gcontext.Params.ByName("key")),
 	).Table(r.ViewSetRunTime.Db.NewScope(r.ResourceModel).TableName()).Updates(requestbodyMap).Error; err != nil {
-		r.ViewSetRunTime.HandleResponse(400, nil, err, errors.New("app.err.deletedatalistfailed"))
+		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrDeleteDataFailed)
 		return
 
 	}

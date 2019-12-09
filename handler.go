@@ -1,9 +1,5 @@
 package trinity
 
-import (
-	"errors"
-)
-
 // RetrieveMixin for Get request
 type RetrieveMixin struct {
 	*ViewSetRunTime
@@ -77,7 +73,7 @@ func (r *DeleteMixin) Handler() {
 
 // Handler for handle Unknown request
 func (r *UnknownMixin) Handler() {
-	r.ViewSetRunTime.HandleResponse(405, nil, errors.New("The HyperText Transfer Protocol (HTTP) 405 Method Not Allowed response status code indicates that the request method is known by the server but is not supported by the target resource"), errors.New("The HyperText Transfer Protocol (HTTP) 405 Method Not Allowed response status code indicates that the request method is known by the server but is not supported by the target resource"))
+	r.ViewSetRunTime.HandleResponse(405, nil, ErrUnknownService, ErrUnknownService)
 	return
 }
 

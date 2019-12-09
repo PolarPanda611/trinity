@@ -164,3 +164,8 @@ func DbLoggerFormatter(r *ViewSetRunTime, v ...interface{}) {
 func (l *defaultViewRuntimeLogger) Print(v ...interface{}) {
 	DbLoggerFormatter(l.ViewRuntime, v...)
 }
+
+// LogPrint customize log
+func LogPrint(words string) {
+	fmt.Fprintln(gin.DefaultWriter, words)
+}
