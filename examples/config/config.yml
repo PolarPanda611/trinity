@@ -6,11 +6,13 @@ local:
   security:
     authentication:
       secretkey: xxx
-      jwtissuer: idpdecathlon.preprod.org
+      jwtissuer: test
       jwtexpirehour: 24
-      jwtheaderprefix: Mold
+      jwtheaderprefix: Bearer
+      jwtverifyissuer: False
+      jwtverifyexpirehour: False
     cors:
-      alloworigins: ["http://127.0.0.1:8083", "http://localhost:8083", "https://assetppd.decathlon.net"]
+      alloworigins: ["http://127.0.0.1:8083", "http://localhost:8083"]
       allowmethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"]
       allowheaders: ["Origin", "Content-Length", "Content-Type", "authorization"]
       ExposeHeaders: ["Content-Length"]
@@ -64,11 +66,13 @@ preprod:
   security:
     authentication:
       secretkey: xxx
-      jwtissuer: idpdecathlon.preprod.org
+      jwtissuer: test
       jwtexpirehour: 24
-      jwtheaderprefix: Mold
+      jwtheaderprefix: Bearer
+      jwtverifyissuer: False
+      jwtverifyexpirehour: False
     cors:
-      alloworigins: ["http://127.0.0.1:8083", "http://localhost:8083", "https://assetppd.decathlon.net"]
+      alloworigins: ["http://127.0.0.1:8083", "http://localhost:8083"]
       allowmethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"]
       allowheaders: ["Origin", "Content-Length", "Content-Type", "authorization"]
       ExposeHeaders: ["Content-Length"]
