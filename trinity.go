@@ -1,7 +1,6 @@
 package trinity
 
 import (
-	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -83,25 +82,23 @@ func New(runMode string) *Trinity {
 }
 
 // Serve http
-func (t *Trinity) Serve() {
+func (t *Trinity) Serve() error {
+	defer t.Close()
 	s := &http.Server{
-		Addr:              ":" + t.Setting.HTTP.Port,
+		Addr:              ":" + t.Setting.Webapp.Port,
 		Handler:           t.Router,
-		ReadTimeout:       time.Duration(t.Setting.HTTP.ReadTimeoutSecond) * time.Second,
-		ReadHeaderTimeout: time.Duration(t.Setting.HTTP.ReadHeaderTimeoutSecond) * time.Second,
-		WriteTimeout:      time.Duration(t.Setting.HTTP.WriteTimeoutSecond) * time.Second,
-		IdleTimeout:       time.Duration(t.Setting.HTTP.IdleTimeoutSecond) * time.Second,
-		MaxHeaderBytes:    t.Setting.HTTP.MaxHeaderBytes,
+		ReadTimeout:       time.Duration(t.Setting.Webapp.ReadTimeoutSecond) * time.Second,
+		ReadHeaderTimeout: time.Duration(t.Setting.Webapp.ReadHeaderTimeoutSecond) * time.Second,
+		WriteTimeout:      time.Duration(t.Setting.Webapp.WriteTimeoutSecond) * time.Second,
+		IdleTimeout:       time.Duration(t.Setting.Webapp.IdleTimeoutSecond) * time.Second,
+		MaxHeaderBytes:    t.Setting.Webapp.MaxHeaderBytes,
 	}
-	t.Logger.Print("[info] %v start http server listening : %v , version : %v ", time.Now().Format(time.RFC3339), t.Setting.HTTP.Port, t.Setting.Version)
-	fmt.Printf("[info] %v start http server listening : %v , version : %v ", time.Now().Format(time.RFC3339), t.Setting.HTTP.Port, t.Setting.Version)
-	s.ListenAndServe()
-	return
+	t.Logger.Print("[info] %v start http server listening : %v , version : %v ", time.Now().Format(time.RFC3339), t.Setting.Webapp.Port, t.Setting.Version)
+	return s.ListenAndServe()
 }
 
 // Close http
 func (t *Trinity) Close() {
-	fmt.Printf("[info] %v end http server listening : %v , version : %v ", time.Now().Format(time.RFC3339), t.Setting.HTTP.Port, t.Setting.Version)
-	t.Logger.Print("[info] %v end http server listening : %v , version : %v ", time.Now().Format(time.RFC3339), t.Setting.HTTP.Port, t.Setting.Version)
-	return
+	t.Db.Close()
+	t.Logger.Print("[info] %v end http server listening : %v , version : %v ", time.Now().Format(time.RFC3339), t.Setting.Webapp.Port, t.Setting.Version)
 }

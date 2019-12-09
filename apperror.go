@@ -33,6 +33,7 @@ func (e *AppError) RecordError() {
 //AppErrorViewSet for app error http handle
 func AppErrorViewSet(c *gin.Context) {
 	v := NewViewSet()
+	v.HasAuthCtl = true
 	v.FilterByList = []string{"trace_id"}
 	v.NewRunTime(
 		c,

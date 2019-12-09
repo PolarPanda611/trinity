@@ -12,6 +12,7 @@ import (
 // NewRouter initial router
 func (t *Trinity) NewRouter() {
 	// Creates a router without any middleware by default
+	gin.SetMode(t.Setting.Log.GinMode)
 	r := gin.New()
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     t.Setting.Security.Cors.AllowOrigins,
@@ -24,12 +25,12 @@ func (t *Trinity) NewRouter() {
 		},
 		MaxAge: time.Duration(t.Setting.Security.Cors.MaxAgeHour) * time.Hour,
 	}))
-	r.LoadHTMLGlob(t.Setting.HTTP.TemplatePath)
+	// r.LoadHTMLGlob(t.Setting.Webapp.TemplatePath)
 	r.RedirectTrailingSlash = false
 	r.Use(LoggerWithFormatter())
 	r.Use(gin.Recovery())
-	r.Static(t.Setting.HTTP.MediaURL, t.Setting.HTTP.MediaPath)
-	r.Static(t.Setting.HTTP.StaticURL, t.Setting.HTTP.StaticPath)
+	r.Static(t.Setting.Webapp.MediaURL, t.Setting.Webapp.MediaPath)
+	r.Static(t.Setting.Webapp.StaticURL, t.Setting.Webapp.StaticPath)
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	r.GET("/ping", func(c *gin.Context) {
 		err := Db.DB().Ping()

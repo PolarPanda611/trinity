@@ -33,7 +33,7 @@ type Setting struct {
 			MaxAgeHour       int      `yaml:"maxagehour"`
 		}
 	}
-	HTTP struct {
+	Webapp struct {
 		Port string `yaml:"port"`
 		// ReadTimeout is the maximum duration for reading the entire
 		// request, including the body.
@@ -79,9 +79,9 @@ type Setting struct {
 		MaxBodySize    int    `yaml:"maxbodysize"`
 	}
 	Log struct {
-		EnableLogFile bool   `yaml:"enablelogfile"`
-		LogRootPath   string `yaml:"logrootpath"`
-		LogName       string `yaml:"logname"`
+		GinMode     string `yaml:"ginmode"`
+		LogRootPath string `yaml:"logrootpath"`
+		LogName     string `yaml:"logname"`
 	}
 	Cache struct {
 		Redis struct {
@@ -93,8 +93,8 @@ type Setting struct {
 			Idletimeout int
 		}
 		Gcache struct {
-			CacheSize int
-			Timeout   int
+			CacheSize int `yaml:"cachesize"`
+			Timeout   int `yaml:"timeout"`
 		}
 	}
 	Database struct {
