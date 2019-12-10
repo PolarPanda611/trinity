@@ -77,6 +77,7 @@ type Setting struct {
 		MediaPath      string `yaml:"mediapath"`
 		StaticURL      string `yaml:"staticurl"`
 		StaticPath     string `yaml:"staticpath"`
+		MigrationPath  string `yaml:"migrationpath"`
 		PageSize       int    `yaml:"pagesize"`
 		MaxBodySize    int    `yaml:"maxbodysize"`
 	}

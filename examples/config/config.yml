@@ -90,6 +90,7 @@ preprod:
     mediapath: ./media
     staticurl: /api/static
     staticpath: ./static
+    migrationpath: ./static/migrations
     pagesize: 20
     maxbodysize: 5242880
   log:

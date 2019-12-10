@@ -2,6 +2,7 @@ package trinity
 
 import (
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -10,6 +11,8 @@ import (
 )
 
 var (
+	// ProjectRootPath project root path
+	ProjectRootPath string
 	// DefaultRunMode will load runmode config
 	DefaultRunMode = "local"
 
@@ -45,6 +48,7 @@ type Trinity struct {
 }
 
 func (t *Trinity) initDefaultValue() {
+	ProjectRootPath, _ = os.Getwd()
 	DefaultJwtexpirehour = t.Setting.Security.Authentication.JwtExpireHour
 	DefaultJwtheaderprefix = t.Setting.Security.Authentication.JwtHeaderPrefix
 	// DefaultSecretkey for jwt
@@ -76,6 +80,22 @@ func New(runMode string) *Trinity {
 	t.migrate()
 	t.Unlock()
 	return t
+}
+
+// Migrate run migration mode
+func Migrate(runMode string) {
+	t := &Trinity{
+		RunMode: runMode,
+	}
+	t.Lock()
+	t.LoadSetting()
+	t.InitLogger()
+	t.InitDatabase()
+	t.initDefaultValue()
+	t.migrate()
+	t.Unlock()
+	RunMigration()
+
 }
 
 // Serve http

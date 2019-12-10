@@ -142,6 +142,7 @@ func (t *Trinity) migrate() {
 	MigrateModel(
 		ToMigrateDB,
 		ToCreatePermission,
+		&Migration{},
 		&Permission{},
 		&AppError{},
 		&Group{},
