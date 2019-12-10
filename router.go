@@ -31,7 +31,7 @@ func (t *Trinity) InitRouter() {
 	r.Static(t.Setting.Webapp.MediaURL, t.Setting.Webapp.MediaPath)
 	r.Static(t.Setting.Webapp.StaticURL, t.Setting.Webapp.StaticPath)
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	r.GET("/ping", func(c *gin.Context) {
+	r.GET("/api/ping", func(c *gin.Context) {
 		err := Db.DB().Ping()
 		if err != nil {
 			c.AbortWithStatusJSON(400, gin.H{
