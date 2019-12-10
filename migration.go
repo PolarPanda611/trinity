@@ -84,12 +84,12 @@ func RunMigration() {
 		//0_filexxxx.sql
 		if len(strings.Split(fileInfoList[i].Name(), ".sql")) < 2 {
 			// not a .sql file , break
-			fmt.Println(fileInfoList[i].Name() + " is not  .sql file , skip, please use xxx_1.sql ,xxx_2.sql ")
+			fmt.Println(fileInfoList[i].Name() + " is not  .sql file , skip, please use 1_xxx.sql ,2_xxx.sql ")
 			continue
 		}
 		seq, err := strconv.Atoi(strings.Split(fileInfoList[i].Name(), "_")[0])
 		if err != nil {
-			fmt.Println(fileInfoList[i].Name() + " don't have seq number,  skip , please use xxx_1.sql ,xxx_2.sql ")
+			fmt.Println(fileInfoList[i].Name() + " don't have seq number,  skip , please use 1_xxx.sql ,2_xxx.sql")
 			// err , pass the file
 			continue
 		}
