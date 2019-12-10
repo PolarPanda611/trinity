@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 var (
@@ -127,36 +128,38 @@ func (l *defaultLogger) Print(v ...interface{}) {
 // DbLoggerFormatter format gorm db log
 func DbLoggerFormatter(r *ViewSetRunTime, v ...interface{}) {
 	dblogLevel, _ := v[0].(string)
+	sqlfunc := ""
+	effectRows := 0
 	if dblogLevel == "sql" {
-		sqlfunc, _ := v[1].(string)
-		sql, _ := v[3].(string)
-		effectRows, _ := v[5].(int)
+		sqlfunc, _ = v[1].(string)
+		// sql, _ := v[3].(string)
+		effectRows, _ = v[5].(int)
 		// sqldata := v[4]
-		l := LogFormat{
-			Timestamp: time.Now().Format(time.RFC3339),
-			Version:   DefaultAppVersion,
-			// Message:        params.ErrorMessage,
-			LoggerName: "",
-			ThreadName: "",
-			Level:      "",
-			Hostname:   "hostname",
-			ModuleName: DefaultProjectName,
-			TraceID:    r.TraceID,
-			// Latency:        params.Latency,
-			ClientIP:       r.Gcontext.ClientIP(),
-			HTTPMethod:     r.Gcontext.Request.Method,
-			HTTPPath:       r.Gcontext.Request.URL.RequestURI(),
-			HTTPStatusCode: r.Gcontext.Writer.Status(),
-			BodySize:       r.Gcontext.Writer.Size(),
-			UID:            r.Gcontext.GetString("UserID"),
-			ErrorDetail:    r.Gcontext.GetString("ErrorDetail"),
-			SQLFunc:        sqlfunc,
-			SQL:            sql,
-			EffectRows:     effectRows,
-		}
-		b, _ := json.Marshal(l)
-		fmt.Fprintln(gin.DefaultWriter, string(b))
 	}
+	l := LogFormat{
+		Timestamp: time.Now().Format(time.RFC3339),
+		Version:   DefaultAppVersion,
+		// Message:        params.ErrorMessage,
+		LoggerName: "",
+		ThreadName: "",
+		Level:      "",
+		Hostname:   "hostname",
+		ModuleName: DefaultProjectName,
+		TraceID:    r.TraceID,
+		// Latency:        params.Latency,
+		ClientIP:       r.Gcontext.ClientIP(),
+		HTTPMethod:     r.Gcontext.Request.Method,
+		HTTPPath:       r.Gcontext.Request.URL.RequestURI(),
+		HTTPStatusCode: r.Gcontext.Writer.Status(),
+		BodySize:       r.Gcontext.Writer.Size(),
+		UID:            r.Gcontext.GetString("UserID"),
+		ErrorDetail:    r.Gcontext.GetString("ErrorDetail"),
+		SQLFunc:        sqlfunc,
+		SQL:            fmt.Sprintln(gorm.LogFormatter(v...)),
+		EffectRows:     effectRows,
+	}
+	b, _ := json.Marshal(l)
+	fmt.Fprintln(gin.DefaultWriter, string(b))
 
 }
 
