@@ -18,7 +18,8 @@ type ViewSetRunTime struct {
 	Db *gorm.DB
 	// ResourceModel
 	// target resource model
-	ResourceModel interface{} // ResourceModel for the resource
+	ResourceModel     interface{} // ResourceModel for the resource
+	ResourceTableName string
 	// resource serializer , used to limit the retrieve object
 	ModelSerializer interface{}
 	// ModelSerializerlist

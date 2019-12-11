@@ -105,6 +105,7 @@ func (v *ViewSetCfg) NewRunTime(c *gin.Context, ResourceModel interface{}, Model
 		Db:                    v.Db,
 		Method:                httpMethod,
 		ResourceModel:         ResourceModel,
+		ResourceTableName:     resourceName,
 		ModelSerializer:       ModelSerializer,
 		ModelSerializerlist:   ModelSerializerlist,
 		HasAuthCtl:            v.HasAuthCtl,

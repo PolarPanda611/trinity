@@ -82,9 +82,9 @@ type Setting struct {
 		MaxBodySize    int    `yaml:"maxbodysize"`
 	}
 	Log struct {
-		GinMode     string `yaml:"ginmode"`
-		LogRootPath string `yaml:"logrootpath"`
-		LogName     string `yaml:"logname"`
+		GinMode     string `yaml:"ginmode"`     //release   log=>log file , debug, test : log=>console
+		LogRootPath string `yaml:"logrootpath"` //   /var/log/mold
+		LogName     string `yaml:"logname"`     //  app.log
 	}
 	Cache struct {
 		Redis struct {
