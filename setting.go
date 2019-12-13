@@ -4,7 +4,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"log"
-	"os"
 	"path/filepath"
 
 	"gopkg.in/yaml.v2"
@@ -116,8 +115,7 @@ type Setting struct {
 
 // LoadSetting used for load app config file
 func (t *Trinity) LoadSetting() {
-	path, _ := os.Getwd()
-	configfile := filepath.Join(path, "config", "config.yml")
+	configfile := filepath.Join(t.rootPath, "config", "config.yml")
 	f, cerr := ioutil.ReadFile(configfile)
 	if cerr != nil {
 		log.Fatal("Load config error", cerr)

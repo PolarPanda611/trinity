@@ -83,24 +83,21 @@ func RunMigration() {
 		//0_filexxxx.sql
 		if len(strings.Split(fileInfoList[i].Name(), ".sql")) < 2 {
 			// not a .sql file , break
-			log.Fatal(fileInfoList[i].Name() + " is not  .sql file , skip, please use 1_xxx.sql ,2_xxx.sql ")
-			panic("migrate failed")
+			fmt.Println(fileInfoList[i].Name() + " is not  .sql file , skip, please use 1_xxx.sql ,2_xxx.sql ")
 		}
 		seq, err := strconv.Atoi(strings.Split(fileInfoList[i].Name(), "_")[0])
 		if err != nil {
-			log.Fatal(fileInfoList[i].Name() + " don't have seq number,  skip , please use 1_xxx.sql ,2_xxx.sql")
-			panic("migrate failed")
+			fmt.Println(fileInfoList[i].Name() + " don't have seq number,  skip , please use 1_xxx.sql ,2_xxx.sql")
 		}
 		if seq <= currentMigSeq {
-			log.Fatal(fileInfoList[i].Name() + " already executed , skip ")
+			fmt.Println(fileInfoList[i].Name() + " already executed , skip ")
 			// already executed
 			continue
 		}
 		fmt.Println(fileInfoList[i].Name() + "start migration !")
 		migrationError = runMigrationFile(seq, filepath.Join(migrationsDirPath, fileInfoList[i].Name()))
 		if migrationError != nil {
-			log.Fatal(fileInfoList[i].Name() + " excuting error , " + migrationError.Error())
-			panic("migrate failed")
+			fmt.Println(fileInfoList[i].Name() + " excuting error , " + migrationError.Error())
 		}
 		fmt.Println(fileInfoList[i].Name() + "end migration !")
 	}

@@ -116,21 +116,9 @@ func (t *Trinity) SetDB(db *gorm.DB) {
 
 // Migrate run migration mode
 func Migrate(runMode string) {
-	rootPath, _ := os.Getwd()
-	t := &Trinity{
-		runMode:  runMode,
-		rootPath: rootPath,
-	}
-	t.Lock()
-	t.LoadSetting()
-	t.InitLogger()
-	t.InitDatabase()
-	t.InitRouter()
-	t.InitViewSetCfg()
-	t.migrate()
-	t.Unlock()
-	t.initDefaultValue()
+	New(runMode)
 	RunMigration()
+	return
 
 }
 
