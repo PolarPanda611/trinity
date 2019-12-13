@@ -27,7 +27,7 @@ func (e *AppError) BeforeCreate(scope *gorm.Scope) error {
 
 // RecordError to record error
 func (e *AppError) RecordError() {
-	fmt.Println(Db.Create(e).Error)
+	fmt.Println(GlobalTrinity.db.Create(e).Error)
 }
 
 //AppErrorViewSet for app error http handle

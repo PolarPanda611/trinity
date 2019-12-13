@@ -25,17 +25,17 @@ type FedidClaims struct {
 // GenerateToken generate tokens used for auth
 func GenerateToken(userkey string) (string, error, error) {
 	//set expire time
-	expireTime := time.Now().Add(time.Duration(DefaultJwtexpirehour) * time.Hour)
+	expireTime := time.Now().Add(time.Duration(GlobalTrinity.setting.Security.Authentication.JwtExpireHour) * time.Hour)
 
 	claims := Claims{
 		userkey,
 		jwt.StandardClaims{
 			ExpiresAt: expireTime.Unix(),
-			Issuer:    DefaultJwtissuer,
+			Issuer:    GlobalTrinity.setting.Security.Authentication.JwtIssuer,
 		},
 	}
 	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	token, rErr := tokenClaims.SignedString([]byte(DefaultSecretkey))
+	token, rErr := tokenClaims.SignedString([]byte(GlobalTrinity.setting.Security.Authentication.SecretKey))
 	if rErr != nil {
 		return "", rErr, ErrGeneratedToken
 	}
@@ -45,7 +45,7 @@ func GenerateToken(userkey string) (string, error, error) {
 // ParseToken parsing token
 func ParseToken(token string) (*Claims, error, error) {
 	tokenClaims, err := jwt.ParseWithClaims(token, &Claims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(DefaultSecretkey), nil
+		return []byte(GlobalTrinity.setting.Security.Authentication.SecretKey), nil
 	})
 
 	if tokenClaims != nil {
@@ -64,14 +64,14 @@ func CheckTokenValid(c *gin.Context) (*Claims, error, error) {
 	}
 	prefix := strings.Fields(c.Request.Header.Get("Authorization"))[0]
 	token := strings.Fields(c.Request.Header.Get("Authorization"))[1]
-	if prefix != DefaultJwtheaderprefix {
+	if prefix != GlobalTrinity.setting.Security.Authentication.JwtHeaderPrefix {
 		return nil, ErrTokenWrongHeaderPrefix, ErrUnverifiedToken
 	}
 	tokenClaims, rErr, uErr := ParseToken(token)
 	if rErr != nil {
 		return nil, rErr, uErr
 	}
-	if !tokenClaims.StandardClaims.VerifyIssuer(DefaultJwtissuer, true) {
+	if !tokenClaims.StandardClaims.VerifyIssuer(GlobalTrinity.setting.Security.Authentication.JwtIssuer, true) {
 		return nil, ErrTokenWrongIssuer, ErrUnverifiedToken
 	}
 	return tokenClaims, nil, nil
@@ -97,13 +97,13 @@ func ParseUnverifiedToken(token string) (*FedidClaims, error, error) {
 	if err != nil {
 		return nil, err, ErrUnverifiedToken
 	}
-	if AppSetting.Security.Authentication.JwtVerifyExpireHour {
+	if GlobalTrinity.setting.Security.Authentication.JwtVerifyExpireHour {
 		if !claim.StandardClaims.VerifyExpiresAt(time.Now().Unix(), true) {
 			return nil, ErrTokenExpired, ErrUnverifiedToken
 		}
 	}
-	if AppSetting.Security.Authentication.JwtVerifyIssuer {
-		if !claim.StandardClaims.VerifyIssuer(DefaultJwtissuer, true) {
+	if GlobalTrinity.setting.Security.Authentication.JwtVerifyIssuer {
+		if !claim.StandardClaims.VerifyIssuer(GlobalTrinity.setting.Security.Authentication.JwtIssuer, true) {
 			return nil, ErrTokenWrongIssuer, ErrUnverifiedToken
 		}
 	}
@@ -119,14 +119,14 @@ func CheckUnverifiedTokenValid(c *gin.Context) (*FedidClaims, error, error) {
 	}
 	prefix := strings.Fields(c.Request.Header.Get("Authorization"))[0]
 	token := strings.Fields(c.Request.Header.Get("Authorization"))[1]
-	if prefix != DefaultJwtheaderprefix {
+	if prefix != GlobalTrinity.setting.Security.Authentication.JwtHeaderPrefix {
 		return nil, ErrTokenWrongHeaderPrefix, ErrUnverifiedToken
 	}
 	tokenClaims, rErr, uErr := ParseUnverifiedToken(token)
 	if rErr != nil {
 		return nil, rErr, uErr
 	}
-	if !tokenClaims.StandardClaims.VerifyIssuer(DefaultJwtissuer, true) {
+	if !tokenClaims.StandardClaims.VerifyIssuer(GlobalTrinity.setting.Security.Authentication.JwtIssuer, true) {
 		return nil, ErrTokenWrongIssuer, ErrUnverifiedToken
 	}
 	return tokenClaims, nil, nil

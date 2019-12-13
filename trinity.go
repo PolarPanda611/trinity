@@ -1,6 +1,7 @@
 package trinity
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"sync"
@@ -11,89 +12,124 @@ import (
 )
 
 var (
-	// ProjectRootPath project root path
-	ProjectRootPath string
-	// DefaultRunMode will load runmode config
-	DefaultRunMode = "local"
-
-	// DefaultJwtexpirehour for jwt
-	DefaultJwtexpirehour = 2
-	// DefaultJwtheaderprefix for jwt
-	DefaultJwtheaderprefix = "Mold"
-	// DefaultSecretkey for jwt
-	DefaultSecretkey = "234"
-	// DefaultJwtissuer for jwt
-	DefaultJwtissuer = "Mold"
-	// DefaultAppVersion for logging middleware
-	DefaultAppVersion = "v1.0"
-	// DefaultProjectName for logging middleware
-	DefaultProjectName = "trinity"
-	//Db global db instance
-	Db *gorm.DB
 	// GlobalTrinity global instance
 	GlobalTrinity *Trinity
-	// AppSetting Get Global setting
-	AppSetting *Setting
 )
 
 // Trinity struct for app subconfig
 type Trinity struct {
 	sync.RWMutex
-	RunMode string
-	Router  *gin.Engine
-	Setting *Setting
-	Db      *gorm.DB
-	vCfg    *ViewSetCfg
-	Logger  Logger
+	runMode  string
+	router   *gin.Engine
+	setting  *Setting
+	db       *gorm.DB
+	vCfg     *ViewSetCfg
+	rootPath string
+	logger   Logger
 }
 
 func (t *Trinity) initDefaultValue() {
-	ProjectRootPath, _ = os.Getwd()
-	DefaultJwtexpirehour = t.Setting.Security.Authentication.JwtExpireHour
-	DefaultJwtheaderprefix = t.Setting.Security.Authentication.JwtHeaderPrefix
-	// DefaultSecretkey for jwt
-	DefaultSecretkey = t.Setting.Security.Authentication.SecretKey
-	// DefaultJwtissuer for jwt
-	DefaultJwtissuer = t.Setting.Security.Authentication.JwtIssuer
-	// DefaultAppVersion for logging middleware
-	DefaultAppVersion = t.Setting.Version
-	// DefaultProjectName for logging middleware
-	DefaultProjectName = t.Setting.Project
-	Db = t.Db
-	AppSetting = t.Setting
-	DefaultRunMode = t.RunMode
 	GlobalTrinity = t
 }
 
 // New app
+// initial global trinity object
 func New(runMode string) *Trinity {
+	rootPath, _ := os.Getwd()
+	fmt.Println(rootPath)
 	t := &Trinity{
-		RunMode: runMode,
+		runMode:  runMode,
+		rootPath: rootPath,
 	}
-	t.Lock()
 	t.LoadSetting()
 	t.InitLogger()
 	t.InitDatabase()
-	t.initDefaultValue()
 	t.InitRouter()
 	t.InitViewSetCfg()
 	t.migrate()
-	t.Unlock()
+	t.initDefaultValue()
 	return t
+}
+
+// GetVCfg  get vcfg
+func (t *Trinity) GetVCfg() *ViewSetCfg {
+	t.RLock()
+	v := t.vCfg
+	t.RUnlock()
+	return v
+}
+
+// SetVCfg  get vcfg
+func (t *Trinity) SetVCfg(newVCfg *ViewSetCfg) {
+	t.Lock()
+	t.vCfg = newVCfg
+	t.Unlock()
+	return
+}
+
+// GetSetting  get setting
+func (t *Trinity) GetSetting() *Setting {
+	t.RLock()
+	s := t.setting
+	t.RUnlock()
+	return s
+}
+
+// SetSetting  get setting
+func (t *Trinity) SetSetting(s *Setting) {
+	t.RLock()
+	t.setting = s
+	t.RUnlock()
+}
+
+// GetRouter  get router
+func (t *Trinity) GetRouter() *gin.Engine {
+	t.RLock()
+	r := t.router
+	t.RUnlock()
+	return r
+}
+
+// SetRouter  set router
+func (t *Trinity) SetRouter(newRouter *gin.Engine) {
+	t.Lock()
+	t.router = newRouter
+	t.Unlock()
+	return
+}
+
+// GetDB  get db instance
+func (t *Trinity) GetDB() *gorm.DB {
+	t.RLock()
+	d := t.db
+	t.RUnlock()
+	return d
+}
+
+// SetDB  set db instance
+func (t *Trinity) SetDB(db *gorm.DB) {
+	t.Lock()
+	t.db = db
+	t.Unlock()
+	return
 }
 
 // Migrate run migration mode
 func Migrate(runMode string) {
+	rootPath, _ := os.Getwd()
 	t := &Trinity{
-		RunMode: runMode,
+		runMode:  runMode,
+		rootPath: rootPath,
 	}
 	t.Lock()
 	t.LoadSetting()
 	t.InitLogger()
 	t.InitDatabase()
-	t.initDefaultValue()
+	t.InitRouter()
+	t.InitViewSetCfg()
 	t.migrate()
 	t.Unlock()
+	t.initDefaultValue()
 	RunMigration()
 
 }
@@ -102,20 +138,20 @@ func Migrate(runMode string) {
 func (t *Trinity) Serve() error {
 	defer t.Close()
 	s := &http.Server{
-		Addr:              ":" + t.Setting.Webapp.Port,
-		Handler:           t.Router,
-		ReadTimeout:       time.Duration(t.Setting.Webapp.ReadTimeoutSecond) * time.Second,
-		ReadHeaderTimeout: time.Duration(t.Setting.Webapp.ReadHeaderTimeoutSecond) * time.Second,
-		WriteTimeout:      time.Duration(t.Setting.Webapp.WriteTimeoutSecond) * time.Second,
-		IdleTimeout:       time.Duration(t.Setting.Webapp.IdleTimeoutSecond) * time.Second,
-		MaxHeaderBytes:    t.Setting.Webapp.MaxHeaderBytes,
+		Addr:              ":" + t.setting.Webapp.Port,
+		Handler:           t.router,
+		ReadTimeout:       time.Duration(t.setting.Webapp.ReadTimeoutSecond) * time.Second,
+		ReadHeaderTimeout: time.Duration(t.setting.Webapp.ReadHeaderTimeoutSecond) * time.Second,
+		WriteTimeout:      time.Duration(t.setting.Webapp.WriteTimeoutSecond) * time.Second,
+		IdleTimeout:       time.Duration(t.setting.Webapp.IdleTimeoutSecond) * time.Second,
+		MaxHeaderBytes:    t.setting.Webapp.MaxHeaderBytes,
 	}
-	t.Logger.Print("[info]  " + time.Now().Format(time.RFC3339) + "  start http server listening : " + t.Setting.Webapp.Port + ", version : " + t.Setting.Version)
+	t.logger.Print("[info]  " + time.Now().Format(time.RFC3339) + "  start http server listening : " + t.setting.Webapp.Port + ", version : " + t.setting.Version)
 	return s.ListenAndServe()
 }
 
 // Close http
 func (t *Trinity) Close() {
-	t.Db.Close()
-	t.Logger.Print("[info]  " + time.Now().Format(time.RFC3339) + "  end http server listening : " + t.Setting.Webapp.Port + ", version : " + t.Setting.Version)
+	t.db.Close()
+	t.logger.Print("[info]  " + time.Now().Format(time.RFC3339) + "  end http server listening : " + t.setting.Webapp.Port + ", version : " + t.setting.Version)
 }

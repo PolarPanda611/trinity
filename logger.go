@@ -60,13 +60,13 @@ type defaultViewRuntimeLogger struct {
 func CustomizeLogFormatter(params LogFormatterParams) string {
 	l := LogFormat{
 		Timestamp:      params.TimeStamp.Format(time.RFC3339),
-		Version:        DefaultAppVersion,
+		Version:        GlobalTrinity.setting.Version,
 		Message:        params.ErrorMessage,
 		LoggerName:     "",
 		ThreadName:     "",
 		Level:          "",
 		Hostname:       "hostname",
-		ModuleName:     DefaultProjectName,
+		ModuleName:     GlobalTrinity.setting.Project,
 		TraceID:        params.TraceID,
 		Latency:        params.Latency,
 		ClientIP:       params.ClientIP,
@@ -87,17 +87,17 @@ func CustomizeLogFormatter(params LogFormatterParams) string {
 
 // InitLogger initial logger
 func (t *Trinity) InitLogger() {
-	gin.SetMode(t.Setting.Log.GinMode)
+	gin.SetMode(t.setting.Log.GinMode)
 	runmode := gin.Mode()
 	if runmode == "release" {
-		if !CheckFileIsExist(t.Setting.Log.LogRootPath) {
-			if err := os.MkdirAll(t.Setting.Log.LogRootPath, 770); err != nil {
+		if !CheckFileIsExist(t.setting.Log.LogRootPath) {
+			if err := os.MkdirAll(t.setting.Log.LogRootPath, 770); err != nil {
 				log.Fatalln("create log root path error：", err)
 			}
 		}
 		var gFile *os.File
 		var err error
-		logfile := GetLogFilePath(t.Setting.Log.LogRootPath, t.Setting.Log.LogName)
+		logfile := GetLogFilePath(t.setting.Log.LogRootPath, t.setting.Log.LogName)
 		if CheckFileIsExist(logfile) {
 			gFile, err = os.OpenFile(logfile, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
 			if err != nil {
@@ -115,7 +115,9 @@ func (t *Trinity) InitLogger() {
 	} else {
 		gin.DefaultWriter = io.MultiWriter(os.Stderr)
 	}
-	t.Logger = &defaultLogger{}
+	t.Lock()
+	t.logger = &defaultLogger{}
+	t.Unlock()
 }
 
 // LogWriter log
@@ -138,13 +140,13 @@ func DbLoggerFormatter(r *ViewSetRunTime, v ...interface{}) {
 	}
 	l := LogFormat{
 		Timestamp: time.Now().Format(time.RFC3339),
-		Version:   DefaultAppVersion,
+		Version:   GlobalTrinity.setting.Version,
 		// Message:        params.ErrorMessage,
 		LoggerName: "",
 		ThreadName: "",
 		Level:      "",
 		Hostname:   "hostname",
-		ModuleName: DefaultProjectName,
+		ModuleName: GlobalTrinity.setting.Project,
 		TraceID:    r.TraceID,
 		// Latency:        params.Latency,
 		ClientIP:       r.Gcontext.ClientIP(),

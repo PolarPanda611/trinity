@@ -8,7 +8,7 @@ import (
 // InitViewSetCfg for  initial ViewSetCfg
 func (t *Trinity) InitViewSetCfg() {
 	v := &ViewSetCfg{
-		Db:         t.Db,
+		Db:         t.db,
 		HasAuthCtl: false,
 		AuthenticationBackendMap: map[string]func(c *gin.Context) (error, error){
 			"RETRIEVE": JwtUnverifiedAuthBackend,
@@ -50,7 +50,9 @@ func (t *Trinity) InitViewSetCfg() {
 		OrderingByList:      map[string]bool{},
 		PageSize:            10,
 	}
+	t.Lock()
 	t.vCfg = v
+	t.Unlock()
 
 }
 

@@ -127,9 +127,11 @@ func (t *Trinity) LoadSetting() {
 	if err != nil {
 		log.Fatalf("error: %v", err)
 	}
-	c, found := m[t.RunMode]
+	c, found := m[t.runMode]
 	if !found {
 		log.Fatalf("error: %v", errors.New("config not found"))
 	}
-	t.Setting = &c
+	t.Lock()
+	t.setting = &c
+	t.Unlock()
 }

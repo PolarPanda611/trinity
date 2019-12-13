@@ -21,8 +21,8 @@ func (p *Permission) BeforeCreate(scope *gorm.Scope) error {
 }
 
 // CreateOrInitPermission create or init permission
-func (p *Permission) CreateOrInitPermission() {
-	Db.Where(Permission{Code: p.Code}).FirstOrCreate(p)
+func (p *Permission) CreateOrInitPermission(t *Trinity) {
+	t.db.Where(Permission{Code: p.Code}).FirstOrCreate(p)
 }
 
 // PermissionViewSet hanlde router

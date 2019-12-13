@@ -1,18 +1,18 @@
 package trinity
 
 // ToMigrateDB migrate db function
-func ToMigrateDB(m interface{}) {
-	Db.AutoMigrate(m)
+func (t *Trinity) ToMigrateDB(m interface{}) {
+	t.db.AutoMigrate(m)
 }
 
 // ToCreatePermission create permission func
-func ToCreatePermission(pSlice []string) {
+func (t *Trinity) ToCreatePermission(pSlice []string) {
 	p := Permission{Code: pSlice[0], Name: pSlice[1]}
-	p.CreateOrInitPermission()
+	p.CreateOrInitPermission(t)
 }
 
 // MigrateModel to migrate model
-func MigrateModel(funcToMigrateDB func(interface{}), funcToCreatePermission func([]string), modelToMigrate ...interface{}) {
+func (t *Trinity) MigrateModel(funcToMigrateDB func(interface{}), funcToCreatePermission func([]string), modelToMigrate ...interface{}) {
 	for _, v := range modelToMigrate {
 		modelName := GetTypeName(v)
 		funcToMigrateDB(v)
@@ -29,65 +29,65 @@ func MigrateModel(funcToMigrateDB func(interface{}), funcToCreatePermission func
 }
 func (t *Trinity) initEnumtype() {
 	createlanguage := "create type language as enum ('zh-CN','en-US');"
-	if err := t.Db.Exec(createlanguage).Error; err != nil {
-		t.Logger.Print("Func initEnumtype createlanguage err :" + err.Error())
+	if err := t.db.Exec(createlanguage).Error; err != nil {
+		t.logger.Print("Func initEnumtype createlanguage err :" + err.Error())
 	}
 
 }
 func (t *Trinity) initUserGroup() {
-	sql := "CREATE  TABLE \"" + t.Setting.Database.TablePrefix + "user_group\" " +
+	sql := "CREATE  TABLE \"" + t.setting.Database.TablePrefix + "user_group\" " +
 		"( \"id\"  serial ," +
 		"\"group_key\" varchar(50) NOT NULL, " +
 		"\"user_key\" varchar(50) NOT NULL, " +
 		"PRIMARY KEY (\"id\") ," +
-		"constraint " + t.Setting.Database.TablePrefix + "user_group_unique_group_key_user_key unique(\"group_key\",\"user_key\")" +
+		"constraint " + t.setting.Database.TablePrefix + "user_group_unique_group_key_user_key unique(\"group_key\",\"user_key\")" +
 		");"
-	if err := t.Db.Exec(sql).Error; err != nil {
-		t.Logger.Print("Func initUserRole err :" + err.Error())
+	if err := t.db.Exec(sql).Error; err != nil {
+		t.logger.Print("Func initUserRole err :" + err.Error())
 	}
 }
 
 func (t *Trinity) initUserPermission() {
-	sql := "CREATE  TABLE \"" + t.Setting.Database.TablePrefix + "user_permission\" " +
+	sql := "CREATE  TABLE \"" + t.setting.Database.TablePrefix + "user_permission\" " +
 		"( \"id\"  serial ," +
 		"\"permission_key\" varchar(50) NOT NULL, " +
 		"\"user_key\" varchar(50) NOT NULL, " +
 		"PRIMARY KEY (\"id\") ," +
-		"constraint " + t.Setting.Database.TablePrefix + "user_permission_unique_permission_key_user_key unique(\"permission_key\",\"user_key\")" +
+		"constraint " + t.setting.Database.TablePrefix + "user_permission_unique_permission_key_user_key unique(\"permission_key\",\"user_key\")" +
 		");"
-	if err := t.Db.Exec(sql).Error; err != nil {
-		t.Logger.Print("Func initUserPermission err :" + err.Error())
+	if err := t.db.Exec(sql).Error; err != nil {
+		t.logger.Print("Func initUserPermission err :" + err.Error())
 	}
 }
 func (t *Trinity) initGroupPermission() {
-	sql := "CREATE  TABLE \"" + t.Setting.Database.TablePrefix + "group_permission\" " +
+	sql := "CREATE  TABLE \"" + t.setting.Database.TablePrefix + "group_permission\" " +
 		"( \"id\"  serial ," +
 		"\"permission_key\" varchar(50) NOT NULL, " +
 		"\"group_key\" varchar(50) NOT NULL, " +
 		"PRIMARY KEY (\"id\") ," +
-		"constraint " + t.Setting.Database.TablePrefix + "user_permission_unique_permission_key_group_key unique(\"permission_key\",\"group_key\")" +
+		"constraint " + t.setting.Database.TablePrefix + "user_permission_unique_permission_key_group_key unique(\"permission_key\",\"group_key\")" +
 		");"
-	if err := t.Db.Exec(sql).Error; err != nil {
-		t.Logger.Print("Func initGroupPermission err :" + err.Error())
+	if err := t.db.Exec(sql).Error; err != nil {
+		t.logger.Print("Func initGroupPermission err :" + err.Error())
 	}
 }
 
-func initUserDefaultValue() {
+func (t *Trinity) initUserDefaultValue() {
 	initAdminList := []string{"Superadmin"}
 	for _, v := range initAdminList {
 		var admingroup []Group
-		Db.Where("name = ?", "Superadmin").Find(&admingroup)
+		t.db.Where("name = ?", "Superadmin").Find(&admingroup)
 		var adminuser User
 		adminuser.UserGroup = admingroup
 		adminuser.Username = v
-		if err := Db.FirstOrCreate(&adminuser, map[string]interface{}{"username": v}).Error; err != nil {
+		if err := t.db.FirstOrCreate(&adminuser, map[string]interface{}{"username": v}).Error; err != nil {
 			LogPrint("Init Admin user  err :" + err.Error())
 		}
 	}
 
 }
 
-func initPermissionDefaultValue() {
+func (t *Trinity) initPermissionDefaultValue() {
 	//naming rule
 	// Code : module.type.code
 	// Desc : app.right.app.type.xxx
@@ -95,12 +95,12 @@ func initPermissionDefaultValue() {
 		{"system.role.superadmin", "app.right.system.role.superadmin"},
 	}
 	for _, v := range PermissionList {
-		Db.Where(Permission{Code: v[0]}).FirstOrCreate(&Permission{Code: v[0], Name: v[1]})
-		Db.Where(Permission{Code: v[0]}).First(&Permission{}).Update(map[string]interface{}{"name": v[1]})
+		t.db.Where(Permission{Code: v[0]}).FirstOrCreate(&Permission{Code: v[0], Name: v[1]})
+		t.db.Where(Permission{Code: v[0]}).First(&Permission{}).Update(map[string]interface{}{"name": v[1]})
 	}
 }
 
-func initGroupDefaultValue() {
+func (t *Trinity) initGroupDefaultValue() {
 	GroupDefaultList := [][]interface{}{
 		//naming rule
 		// Code : module.type.code
@@ -112,20 +112,20 @@ func initGroupDefaultValue() {
 		name, _ := v[0].(string)
 		description, _ := v[1].(string)
 		plist, _ := v[2].([]string)
-		Db.Where("code in (?)", plist).Find(&rolepermission)
+		t.db.Where("code in (?)", plist).Find(&rolepermission)
 		var group Group
 
 		group.Name = name
 		group.Description = description
 		group.GroupPermission = rolepermission
 
-		if err := Db.Where(Group{Name: name}).FirstOrCreate(&group).Error; err != nil {
+		if err := t.db.Where(Group{Name: name}).FirstOrCreate(&group).Error; err != nil {
 			LogPrint("Func initial group data  err :" + err.Error())
 		}
-		if err := Db.Model(&group).Updates(map[string]interface{}{"description": description}).Error; err != nil {
+		if err := t.db.Model(&group).Updates(map[string]interface{}{"description": description}).Error; err != nil {
 			LogPrint("Func update  group   err :" + err.Error())
 		}
-		if err := Db.Model(&group).Association("GroupPermission").Replace(group.GroupPermission).Error; err != nil {
+		if err := t.db.Model(&group).Association("GroupPermission").Replace(group.GroupPermission).Error; err != nil {
 			LogPrint("Func update  group permission  err :" + err.Error())
 		}
 
@@ -139,16 +139,16 @@ func (t *Trinity) migrate() {
 	t.initUserPermission()  //因为many2many自动生成的表会继承唯一约束，所以手动建立表
 	t.initGroupPermission() //因为many2many自动生成的表会继承唯一约束，所以手动建立表
 
-	MigrateModel(
-		ToMigrateDB,
-		ToCreatePermission,
+	t.MigrateModel(
+		t.ToMigrateDB,
+		t.ToCreatePermission,
 		&Migration{},
 		&Permission{},
 		&AppError{},
 		&Group{},
 		&User{},
 	)
-	initPermissionDefaultValue()
-	initGroupDefaultValue()
-	initUserDefaultValue()
+	t.initPermissionDefaultValue()
+	t.initGroupDefaultValue()
+	t.initUserDefaultValue()
 }

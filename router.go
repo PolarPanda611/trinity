@@ -14,49 +14,51 @@ func (t *Trinity) InitRouter() {
 	// Creates a router without any middleware by default
 	r := gin.New()
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     t.Setting.Security.Cors.AllowOrigins,
-		AllowMethods:     t.Setting.Security.Cors.AllowMethods,
-		AllowHeaders:     t.Setting.Security.Cors.AllowHeaders,
-		ExposeHeaders:    t.Setting.Security.Cors.ExposeHeaders,
-		AllowCredentials: t.Setting.Security.Cors.AllowCredentials,
+		AllowOrigins:     t.setting.Security.Cors.AllowOrigins,
+		AllowMethods:     t.setting.Security.Cors.AllowMethods,
+		AllowHeaders:     t.setting.Security.Cors.AllowHeaders,
+		ExposeHeaders:    t.setting.Security.Cors.ExposeHeaders,
+		AllowCredentials: t.setting.Security.Cors.AllowCredentials,
 		AllowOriginFunc: func(origin string) bool {
 			return origin == "https://github.com"
 		},
-		MaxAge: time.Duration(t.Setting.Security.Cors.MaxAgeHour) * time.Hour,
+		MaxAge: time.Duration(t.setting.Security.Cors.MaxAgeHour) * time.Hour,
 	}))
-	// r.LoadHTMLGlob(t.Setting.Webapp.TemplatePath)
+	// r.LoadHTMLGlob(t.setting.Webapp.TemplatePath)
 	r.RedirectTrailingSlash = false
 	r.Use(LoggerWithFormatter())
 	r.Use(gin.Recovery())
-	r.Static(t.Setting.Webapp.MediaURL, t.Setting.Webapp.MediaPath)
-	r.Static(t.Setting.Webapp.StaticURL, t.Setting.Webapp.StaticPath)
+	r.Static(t.setting.Webapp.MediaURL, t.setting.Webapp.MediaPath)
+	r.Static(t.setting.Webapp.StaticURL, t.setting.Webapp.StaticPath)
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	r.GET("/api/ping", func(c *gin.Context) {
-		err := Db.DB().Ping()
+		err := GlobalTrinity.db.DB().Ping()
 		if err != nil {
 			c.AbortWithStatusJSON(400, gin.H{
 				"Status":     400,
 				"APIStatus":  "Error",
 				"DBStatus":   "Error",
 				"DBError":    err.Error(),
-				"APIVersion": t.Setting.Version,
+				"APIVersion": t.setting.Version,
 			})
 		} else {
 			c.JSON(200, gin.H{
 				"Status":     200,
 				"APIStatus":  "alive",
 				"DBStatus":   "alive",
-				"DBInfo":     Db.DB().Stats(),
-				"APIVersion": t.Setting.Version,
+				"DBInfo":     GlobalTrinity.db.DB().Stats(),
+				"APIVersion": t.setting.Version,
 			})
 		}
 	})
-	t.Router = r
+	t.Lock()
+	t.router = r
+	t.Unlock()
 }
 
 // NewAPIGroup register new apigroup
 func (t *Trinity) NewAPIGroup(path string) *gin.RouterGroup {
-	return t.Router.Group(path)
+	return t.router.Group(path)
 }
 
 // NewAPIInGroup register new api in group

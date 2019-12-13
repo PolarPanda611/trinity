@@ -16,50 +16,52 @@ import (
  */
 func (t *Trinity) InitDatabase() {
 	var dbconnection string
-	switch t.Setting.Database.Type {
+	switch t.setting.Database.Type {
 	case "mysql":
 		var dbconn strings.Builder
 		// 向builder中写入字符 / 字符串
-		dbconn.Write([]byte(t.Setting.Database.User))
+		dbconn.Write([]byte(t.setting.Database.User))
 		dbconn.WriteByte(':')
-		dbconn.Write([]byte(t.Setting.Database.Password))
+		dbconn.Write([]byte(t.setting.Database.Password))
 		dbconn.Write([]byte("@/"))
-		dbconn.Write([]byte(t.Setting.Database.Name))
+		dbconn.Write([]byte(t.setting.Database.Name))
 		dbconn.WriteByte('?')
-		dbconn.Write([]byte(t.Setting.Database.Option))
+		dbconn.Write([]byte(t.setting.Database.Option))
 		dbconnection = dbconn.String()
 
 		break
 	case "postgres":
 		dbconnection = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s %s",
-			t.Setting.Database.Host,
-			t.Setting.Database.Port,
-			t.Setting.Database.User,
-			t.Setting.Database.Password,
-			t.Setting.Database.Name,
-			t.Setting.Database.Option,
+			t.setting.Database.Host,
+			t.setting.Database.Port,
+			t.setting.Database.User,
+			t.setting.Database.Password,
+			t.setting.Database.Name,
+			t.setting.Database.Option,
 		)
 		break
 	}
-	db, err := gorm.Open(t.Setting.Database.Type, dbconnection)
+	db, err := gorm.Open(t.setting.Database.Type, dbconnection)
 
 	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
-		return t.Setting.Database.TablePrefix + defaultTableName
+		return t.setting.Database.TablePrefix + defaultTableName
 	}
 
 	if err != nil {
 		log.Fatalf("models.Setup err: %v", err)
 	}
-	db.LogMode(t.Setting.Runtime.Debug)
-	db.SetLogger(t.Logger)
+	db.LogMode(t.setting.Runtime.Debug)
+	db.SetLogger(t.logger)
 	db.SingularTable(true)
 	db.Callback().Create().Replace("gorm:update_time_stamp", updateTimeStampAndUUIDForCreateCallback)
 	db.Callback().Update().Replace("gorm:update_time_stamp", updateTimeStampForUpdateCallback)
 	db.Callback().Delete().Replace("gorm:delete", deleteCallback)
 
-	db.DB().SetMaxIdleConns(t.Setting.Database.DbMaxIdleConn)
-	db.DB().SetMaxOpenConns(t.Setting.Database.DbMaxOpenConn)
-	t.Db = db
+	db.DB().SetMaxIdleConns(t.setting.Database.DbMaxIdleConn)
+	db.DB().SetMaxOpenConns(t.setting.Database.DbMaxOpenConn)
+	t.Lock()
+	t.db = db
+	t.Unlock()
 
 }
 
