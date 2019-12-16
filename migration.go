@@ -66,7 +66,7 @@ func runMigrationFile(seq int, filepath string) error {
 // scan the migration file under static/migrations
 func RunMigration() {
 	var migrationError error
-	migrationsDirPath := filepath.Join(GlobalTrinity.rootPath, GlobalTrinity.setting.Webapp.MediaPath)
+	migrationsDirPath := filepath.Join(GlobalTrinity.rootPath, GlobalTrinity.setting.Webapp.MigrationPath)
 	fileInfoList, err := ioutil.ReadDir(migrationsDirPath)
 	if err != nil {
 		log.Fatal(err)
