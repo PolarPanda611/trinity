@@ -101,13 +101,14 @@ func (v *ViewSetCfg) NewRunTime(c *gin.Context, ResourceModel interface{}, Model
 			"DELETE":   []string{"system.delete." + resourceName},
 		}
 	}
+
 	vRun := &ViewSetRunTime{
 		Gcontext:              c,
 		TraceID:               c.GetString("TraceID"),
 		Db:                    v.Db,
 		Method:                httpMethod,
 		ResourceModel:         ResourceModel,
-		ResourceTableName:     resourceName,
+		ResourceTableName:     v.Db.NewScope(ResourceModel).TableName(),
 		ModelSerializer:       ModelSerializer,
 		ModelSerializerlist:   ModelSerializerlist,
 		HasAuthCtl:            v.HasAuthCtl,

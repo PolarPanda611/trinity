@@ -17,7 +17,7 @@ func GetResourceByid(r *RetrieveMixin) {
 		FilterByFilter(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.FilterByList, r.ViewSetRunTime.FilterCustomizeFunc),
 		QueryBySelect(r.ViewSetRunTime.Gcontext),
 		QueryByPreload(r.ViewSetRunTime.PreloadList),
-	).Table(r.ViewSetRunTime.Db.NewScope(r.ResourceModel).TableName()).First(r.ViewSetRunTime.ModelSerializer).Error; err != nil {
+	).Table(r.ViewSetRunTime.ResourceTableName).First(r.ViewSetRunTime.ModelSerializer).Error; err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			r.ViewSetRunTime.HandleResponse(400, nil, err, gorm.ErrRecordNotFound)
 			return
@@ -48,7 +48,7 @@ func GetResourceList(r *GetMixin) {
 			QueryByOrdering(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.OrderingByList),
 			QueryByPagination(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.PageSize),
 			QueryByPreload(r.ViewSetRunTime.PreloadList),
-		).Table(r.ViewSetRunTime.Db.NewScope(r.ResourceModel).TableName()).Find(r.ViewSetRunTime.ModelSerializerlist).Limit(-1).Offset(-1).Count(&count).Error; err != nil {
+		).Table(r.ViewSetRunTime.ResourceTableName).Find(r.ViewSetRunTime.ModelSerializerlist).Limit(-1).Offset(-1).Count(&count).Error; err != nil {
 			r.ViewSetRunTime.HandleResponse(400, nil, err, ErrLoadDataFailed)
 			return
 		}
@@ -89,7 +89,7 @@ func GetResourceList(r *GetMixin) {
 			FilterBySearch(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.SearchingByList),
 			QueryBySelect(r.ViewSetRunTime.Gcontext),
 			QueryByOrdering(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.OrderingByList),
-		).Table(r.ViewSetRunTime.Db.NewScope(r.ResourceModel).TableName()).Find(r.ViewSetRunTime.ModelSerializerlist).Error; err != nil {
+		).Table(r.ViewSetRunTime.ResourceTableName).Find(r.ViewSetRunTime.ModelSerializerlist).Error; err != nil {
 			r.ViewSetRunTime.HandleResponse(400, nil, err, ErrLoadDataFailed)
 			return
 		}
@@ -105,7 +105,7 @@ func CreateResource(r *PostMixin) {
 		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrResolveDataFailed)
 		return
 	}
-	if err := r.ViewSetRunTime.Db.Table(r.ViewSetRunTime.Db.NewScope(r.ResourceModel).TableName()).Create(r.ViewSetRunTime.ModelSerializer).Error; err != nil {
+	if err := r.ViewSetRunTime.Db.Table(r.ViewSetRunTime.ResourceTableName).Create(r.ViewSetRunTime.ModelSerializer).Error; err != nil {
 		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrCreateDataFailed)
 		return
 	}
@@ -125,7 +125,7 @@ func PatchResource(r *PatchMixin) {
 	if err := r.ViewSetRunTime.Db.Scopes(
 		r.ViewSetRunTime.DBFilterBackend,
 		FilterByParam(r.ViewSetRunTime.Gcontext.Params.ByName("key")),
-	).Table(r.ViewSetRunTime.Db.NewScope(r.ResourceModel).TableName()).Updates(requestbodyMap).First(r.ViewSetRunTime.ModelSerializer).Error; err != nil {
+	).Table(r.ViewSetRunTime.ResourceTableName).Updates(requestbodyMap).First(r.ViewSetRunTime.ModelSerializer).Error; err != nil {
 		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrUpdateDataFailed)
 		return
 	}
@@ -143,7 +143,7 @@ func DeleteResource(r *DeleteMixin) {
 	if err := r.ViewSetRunTime.Db.Scopes(
 		r.ViewSetRunTime.DBFilterBackend,
 		FilterByParam(r.ViewSetRunTime.Gcontext.Params.ByName("key")),
-	).Table(r.ViewSetRunTime.Db.NewScope(r.ResourceModel).TableName()).Updates(requestbodyMap).Error; err != nil {
+	).Table(r.ViewSetRunTime.ResourceTableName).Updates(requestbodyMap).Error; err != nil {
 		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrDeleteDataFailed)
 		return
 

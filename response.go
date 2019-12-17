@@ -19,7 +19,7 @@ func (v *ViewSetRunTime) Response() {
 	res.Status = v.Status
 	res.TraceID = v.TraceID
 	if v.RealError != nil {
-		userKey := v.Gcontext.GetString("UserID")
+		userKey := v.Gcontext.GetString("UserKey")
 		// v.Cfg.Logger.LogWriter(v)
 		e := AppError{
 			Logmodel: Logmodel{CreateUserKey: &userKey},
