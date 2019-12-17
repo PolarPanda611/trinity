@@ -80,7 +80,7 @@ func updateTimeStampAndUUIDForCreateCallback(scope *gorm.Scope) {
 		}
 		if createUserField, ok := scope.FieldByName("CreateUserKey"); ok {
 			if createUserField.IsBlank {
-				fmt.Println(createUserField.Set(reqUserKey))
+				createUserField.Set(reqUserKey)
 			}
 		}
 
@@ -104,7 +104,6 @@ func updateTimeStampForUpdateCallback(scope *gorm.Scope) {
 		if !ok {
 			reqUserKey = nil
 		}
-		// fmt.Println(scope.InstanceGet("gorm:update_attrs"))
 		var updateAttrs = map[string]interface{}{}
 		if attrs, ok := scope.InstanceGet("gorm:update_attrs"); ok {
 			updateAttrs = attrs.(map[string]interface{})
@@ -112,8 +111,6 @@ func updateTimeStampForUpdateCallback(scope *gorm.Scope) {
 			updateAttrs["update_user_key"] = reqUserKey
 			scope.InstanceSet("gorm:update_attrs", updateAttrs)
 		}
-		// fmt.Println(scope.InstanceGet("gorm:update_attrs"))
-
 		if _, ok := scope.Get("gorm:update_column"); !ok {
 			scope.SetColumn("UpdatedTime", time.Now())
 		}

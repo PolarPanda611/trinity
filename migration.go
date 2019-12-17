@@ -41,7 +41,6 @@ func runMigrationFile(seq int, filepath string) error {
 	scanner := bufio.NewScanner(file)
 	var migError string
 	for scanner.Scan() {
-		fmt.Println(scanner.Text())
 		sql := scanner.Text()
 		if err := GlobalTrinity.db.Exec(sql).Error; err != nil {
 			migError += err.Error()
@@ -94,12 +93,12 @@ func RunMigration() {
 			// already executed
 			continue
 		}
-		fmt.Println(fileInfoList[i].Name() + "start migration !")
+		fmt.Println(fileInfoList[i].Name() + " start migration !")
 		migrationError = runMigrationFile(seq, filepath.Join(migrationsDirPath, fileInfoList[i].Name()))
 		if migrationError != nil {
 			fmt.Println(fileInfoList[i].Name() + " excuting error , " + migrationError.Error())
 		}
-		fmt.Println(fileInfoList[i].Name() + "end migration !")
+		fmt.Println(fileInfoList[i].Name() + " end migration !")
 	}
 
 	fmt.Println("run all migrations successfully")

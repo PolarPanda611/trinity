@@ -1,7 +1,6 @@
 package trinity
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"sync"
@@ -36,7 +35,6 @@ func (t *Trinity) initDefaultValue() {
 // initial global trinity object
 func New(runMode string) *Trinity {
 	rootPath, _ := os.Getwd()
-	fmt.Println(rootPath)
 	t := &Trinity{
 		runMode:  runMode,
 		rootPath: rootPath,
@@ -117,7 +115,6 @@ func (t *Trinity) SetDB(db *gorm.DB) {
 // Migrate run migration mode
 func Migrate(runMode string) {
 	New(runMode)
-	RunMigration()
 	return
 
 }

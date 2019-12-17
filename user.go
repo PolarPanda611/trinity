@@ -1,7 +1,6 @@
 package trinity
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
 )
@@ -25,17 +24,4 @@ func (user *User) BeforeCreate(scope *gorm.Scope) error {
 	//add customize primary key
 	scope.SetColumn("Key", uuid.NewV4().String())
 	return nil
-}
-
-// UserViewSet hanlde router
-func UserViewSet(c *gin.Context) {
-
-	v := NewViewSet()
-	v.HasAuthCtl = true
-	v.NewRunTime(
-		c,
-		&User{},
-		&User{},
-		&[]User{},
-	).ViewSetServe()
 }

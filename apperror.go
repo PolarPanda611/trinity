@@ -1,8 +1,6 @@
 package trinity
 
 import (
-	"fmt"
-
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
@@ -27,7 +25,7 @@ func (e *AppError) BeforeCreate(scope *gorm.Scope) error {
 
 // RecordError to record error
 func (e *AppError) RecordError() {
-	fmt.Println(GlobalTrinity.db.Create(e).Error)
+	GlobalTrinity.db.Create(e)
 }
 
 //AppErrorViewSet for app error http handle

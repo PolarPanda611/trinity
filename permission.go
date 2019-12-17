@@ -1,7 +1,6 @@
 package trinity
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
 )
@@ -23,17 +22,4 @@ func (p *Permission) BeforeCreate(scope *gorm.Scope) error {
 // CreateOrInitPermission create or init permission
 func (p *Permission) CreateOrInitPermission(t *Trinity) {
 	t.db.Where(Permission{Code: p.Code}).FirstOrCreate(p)
-}
-
-// PermissionViewSet hanlde router
-func PermissionViewSet(c *gin.Context) {
-	v := NewViewSet()
-	v.HasAuthCtl = true
-	v.NewRunTime(
-		c,
-		&Permission{},
-		&Permission{},
-		&[]Permission{},
-	).ViewSetServe()
-
 }
