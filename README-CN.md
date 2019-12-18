@@ -20,6 +20,7 @@ p.s: django restframework like :)
 * 支持快速开发rest风格api并实现增删改查，开箱即用
 * JWT token生成，认证，刷新中间件
 * json log风格中间件
+* 支持请求事务
 * 支持自定义用户权限查询
 * 支持自定义接口访问权限
 * 支持自定义接口数据访问权限
@@ -288,12 +289,22 @@ func Response(r *ViewSetRunTime) {
 
 }
 ```
-
+   * 支持请求事务
+```
+	local:
+		project: xx 
+		version: xxx
+		runtime:
+			debug: True
+		security:
+			...
+		webapp:
+			...
+			atomicrequest: true
+``` 
 
 
 ## to do list : 
 支持字段级验证请求数据   
 外键字段过滤   
-gorm日志链路追踪   
-
 

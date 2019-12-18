@@ -10,6 +10,14 @@ func (t *Trinity) InitViewSetCfg() {
 	v := &ViewSetCfg{
 		Db:         t.db,
 		HasAuthCtl: false,
+		AtomicRequestMap: map[string]bool{
+			"RETRIEVE": t.setting.Webapp.AtomicRequest,
+			"GET":      t.setting.Webapp.AtomicRequest,
+			"POST":     t.setting.Webapp.AtomicRequest,
+			"PATCH":    t.setting.Webapp.AtomicRequest,
+			"PUT":      t.setting.Webapp.AtomicRequest,
+			"DELETE":   t.setting.Webapp.AtomicRequest,
+		},
 		AuthenticationBackendMap: map[string]func(c *gin.Context) (error, error){
 			"RETRIEVE": JwtUnverifiedAuthBackend,
 			"GET":      JwtUnverifiedAuthBackend,
@@ -60,6 +68,7 @@ func (v *ViewSetCfg) clone() *ViewSetCfg {
 	vClone := &ViewSetCfg{
 		Db:                       v.Db,
 		HasAuthCtl:               v.HasAuthCtl,
+		AtomicRequestMap:         v.AtomicRequestMap,
 		AuthenticationBackendMap: v.AuthenticationBackendMap,
 		GetCurrentUserAuth:       v.GetCurrentUserAuth,
 		AccessBackendRequireMap:  v.AccessBackendRequireMap,
@@ -101,11 +110,19 @@ func (v *ViewSetCfg) NewRunTime(c *gin.Context, ResourceModel interface{}, Model
 			"DELETE":   []string{"system.delete." + resourceName},
 		}
 	}
+	var db *gorm.DB
+	isAtomicRequest := v.AtomicRequestMap[httpMethod]
+	if isAtomicRequest {
+		db = v.Db.Begin()
+	} else {
+		db = v.Db
+	}
 
 	vRun := &ViewSetRunTime{
 		Gcontext:              c,
 		TraceID:               c.GetString("TraceID"),
-		Db:                    v.Db,
+		IsAtomicRequest:       isAtomicRequest,
+		Db:                    db,
 		Method:                httpMethod,
 		ResourceModel:         ResourceModel,
 		ResourceTableName:     v.Db.NewScope(ResourceModel).TableName(),

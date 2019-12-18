@@ -35,9 +35,11 @@ func (v *ViewSetRunTime) Response() {
 		v.Gcontext.Error(v.RealError)
 		v.Gcontext.Error(v.UserError)
 		res.Result = v.UserError.Error()
+		v.Db.Rollback()
 		v.Gcontext.AbortWithStatusJSON(v.Status, res)
 	} else {
 		res.Result = v.ResBody
+		v.Db.Commit()
 		v.Gcontext.JSON(v.Status, res)
 	}
 	return

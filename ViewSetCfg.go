@@ -12,6 +12,8 @@ type ViewSetRunTime struct {
 	mu      sync.Mutex
 	TraceID string
 	Method  string
+	// is atomic request
+	IsAtomicRequest bool
 	// gin.context
 	Gcontext *gin.Context
 	// db instance
@@ -64,6 +66,8 @@ type ViewSetCfg struct {
 	sync.RWMutex
 	// global config
 	Db *gorm.DB
+	// if do the atomic request
+	AtomicRequestMap map[string]bool
 	// HasAuthCtl
 	// if do the auth check ,default false
 	HasAuthCtl bool

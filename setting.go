@@ -79,6 +79,7 @@ type Setting struct {
 		MigrationPath  string `yaml:"migrationpath"`
 		PageSize       int    `yaml:"pagesize"`
 		MaxBodySize    int    `yaml:"maxbodysize"`
+		AtomicRequest  bool   `yaml:"atomicrequest"`
 	}
 	Log struct {
 		GinMode     string `yaml:"ginmode"`     //release   log=>log file , debug, test : log=>console
