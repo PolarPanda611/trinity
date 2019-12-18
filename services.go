@@ -26,7 +26,7 @@ func GetResourceByid(r *RetrieveMixin) {
 		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrLoadDataFailed)
 		return
 	}
-	r.ViewSetRunTime.HandleResponse(200, r.ModelSerializer, nil, nil)
+	r.ViewSetRunTime.HandleResponse(200, r.ViewSetRunTime.ModelSerializer, nil, nil)
 	return
 }
 
@@ -146,7 +146,6 @@ func DeleteResource(r *DeleteMixin) {
 	).Table(r.ViewSetRunTime.ResourceTableName).Updates(requestbodyMap).Error; err != nil {
 		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrDeleteDataFailed)
 		return
-
 	}
 	r.ViewSetRunTime.HandleResponse(200, "Delete Successfully", nil, nil)
 	return

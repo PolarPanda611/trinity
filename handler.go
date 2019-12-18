@@ -2,37 +2,37 @@ package trinity
 
 // RetrieveMixin for Get request
 type RetrieveMixin struct {
-	*ViewSetRunTime
+	ViewSetRunTime *ViewSetRunTime
 }
 
 // GetMixin for Get request
 type GetMixin struct {
-	*ViewSetRunTime
+	ViewSetRunTime *ViewSetRunTime
 }
 
 // PostMixin for Get request
 type PostMixin struct {
-	*ViewSetRunTime
+	ViewSetRunTime *ViewSetRunTime
 }
 
 // PatchMixin for Get request
 type PatchMixin struct {
-	*ViewSetRunTime
+	ViewSetRunTime *ViewSetRunTime
 }
 
 // PutMixin for Get request
 type PutMixin struct {
-	*ViewSetRunTime
+	ViewSetRunTime *ViewSetRunTime
 }
 
 // DeleteMixin for Get request
 type DeleteMixin struct {
-	*ViewSetRunTime
+	ViewSetRunTime *ViewSetRunTime
 }
 
 // UnknownMixin for Get request
 type UnknownMixin struct {
-	*ViewSetRunTime
+	ViewSetRunTime *ViewSetRunTime
 }
 
 // Handler for handle retrieve request
