@@ -28,10 +28,10 @@ func (t *Trinity) InitRouter() {
 	r.RedirectTrailingSlash = false
 	r.Use(LoggerWithFormatter())
 	r.Use(gin.Recovery())
-	r.Static(t.setting.Webapp.MediaURL, t.setting.Webapp.MediaPath)
-	r.Static(t.setting.Webapp.StaticURL, t.setting.Webapp.StaticPath)
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	r.GET("/api/ping", func(c *gin.Context) {
+	r.Static(t.setting.Webapp.BaseURL+t.setting.Webapp.MediaURL, t.setting.Webapp.MediaPath)
+	r.Static(t.setting.Webapp.BaseURL+t.setting.Webapp.StaticURL, t.setting.Webapp.StaticPath)
+	r.GET(t.setting.Webapp.BaseURL+"/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.GET(t.setting.Webapp.BaseURL+"/api/ping", func(c *gin.Context) {
 		err := GlobalTrinity.db.DB().Ping()
 		if err != nil {
 			c.AbortWithStatusJSON(400, gin.H{
@@ -58,7 +58,7 @@ func (t *Trinity) InitRouter() {
 
 // NewAPIGroup register new apigroup
 func (t *Trinity) NewAPIGroup(path string) *gin.RouterGroup {
-	return t.router.Group(path)
+	return t.router.Group(t.setting.Webapp.BaseURL + path)
 }
 
 // NewAPIInGroup register new api in group
