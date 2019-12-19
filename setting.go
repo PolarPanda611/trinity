@@ -80,7 +80,9 @@ type Setting struct {
 		PageSize       int    `yaml:"pagesize"`
 		MaxBodySize    int    `yaml:"maxbodysize"`
 		AtomicRequest  bool   `yaml:"atomicrequest"`
-		BaseURL        string `yaml:"baseurl"`
+		// if api root is not root , replease with base url
+		// e.g : /assetgo
+		BaseURL string `yaml:"baseurl"`
 	}
 	Log struct {
 		GinMode     string `yaml:"ginmode"`     //release   log=>log file , debug, test : log=>console
