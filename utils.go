@@ -317,8 +317,9 @@ func GetTypeName(myvar interface{}, isToLowerCase bool) string {
 	t := reflect.TypeOf(myvar)
 	if t.Kind() == reflect.Ptr {
 		name = t.Elem().Name()
+	} else {
+		name = t.Name()
 	}
-	name = t.Name()
 	if isToLowerCase {
 		name = strings.ToLower(name)
 	}
