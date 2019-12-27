@@ -14,17 +14,19 @@ func (t *Trinity) InitRouter() {
 	// Creates a router without any middleware by default
 	r := gin.New()
 	r.Use(LoggerWithFormatter())
-	r.Use(cors.New(cors.Config{
-		AllowOrigins:     t.setting.Security.Cors.AllowOrigins,
-		AllowMethods:     t.setting.Security.Cors.AllowMethods,
-		AllowHeaders:     t.setting.Security.Cors.AllowHeaders,
-		ExposeHeaders:    t.setting.Security.Cors.ExposeHeaders,
-		AllowCredentials: t.setting.Security.Cors.AllowCredentials,
-		AllowOriginFunc: func(origin string) bool {
-			return origin == "https://github.com"
-		},
-		MaxAge: time.Duration(t.setting.Security.Cors.MaxAgeHour) * time.Hour,
-	}))
+	if t.setting.Security.Cors.Enable {
+		r.Use(cors.New(cors.Config{
+			AllowOrigins:     t.setting.Security.Cors.AllowOrigins,
+			AllowMethods:     t.setting.Security.Cors.AllowMethods,
+			AllowHeaders:     t.setting.Security.Cors.AllowHeaders,
+			ExposeHeaders:    t.setting.Security.Cors.ExposeHeaders,
+			AllowCredentials: t.setting.Security.Cors.AllowCredentials,
+			AllowOriginFunc: func(origin string) bool {
+				return origin == "https://github.com"
+			},
+			MaxAge: time.Duration(t.setting.Security.Cors.MaxAgeHour) * time.Hour,
+		}))
+	}
 	// r.LoadHTMLGlob(t.setting.Webapp.TemplatePath)
 	r.RedirectTrailingSlash = false
 	r.Use(gin.Recovery())

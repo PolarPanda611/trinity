@@ -26,6 +26,7 @@ type Setting struct {
 			JwtHeaderPrefix     string `yaml:"jwtheaderprefix"`
 		}
 		Cors struct {
+			Enable           bool     `yaml:"enable"`
 			AllowOrigins     []string `yaml:"alloworigins"`
 			AllowMethods     []string `yaml:"allowmethods"`
 			AllowHeaders     []string `yaml:"allowheaders"`
