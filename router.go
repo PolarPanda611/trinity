@@ -13,6 +13,7 @@ import (
 func (t *Trinity) InitRouter() {
 	// Creates a router without any middleware by default
 	r := gin.New()
+	r.Use(LoggerWithFormatter())
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     t.setting.Security.Cors.AllowOrigins,
 		AllowMethods:     t.setting.Security.Cors.AllowMethods,
@@ -26,7 +27,6 @@ func (t *Trinity) InitRouter() {
 	}))
 	// r.LoadHTMLGlob(t.setting.Webapp.TemplatePath)
 	r.RedirectTrailingSlash = false
-	r.Use(LoggerWithFormatter())
 	r.Use(gin.Recovery())
 	r.Static(t.setting.Webapp.BaseURL+t.setting.Webapp.MediaURL, t.setting.Webapp.MediaPath)
 	r.Static(t.setting.Webapp.BaseURL+t.setting.Webapp.StaticURL, t.setting.Webapp.StaticPath)
