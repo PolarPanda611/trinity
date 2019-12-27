@@ -99,7 +99,7 @@ func NewViewSet() *ViewSetCfg {
 // NewRunTime : new the run time with the default config
 func (v *ViewSetCfg) NewRunTime(c *gin.Context, ResourceModel interface{}, ModelSerializer interface{}, ModelSerializerlist interface{}) *ViewSetRunTime {
 	httpMethod := GetRequestType(c)
-	resourceName := GetTypeName(ResourceModel)
+	resourceName := GetTypeName(ResourceModel, true)
 	if len(v.AccessBackendRequireMap) == 0 {
 		v.AccessBackendRequireMap = map[string][]string{
 			"RETRIEVE": []string{"system.view." + resourceName},

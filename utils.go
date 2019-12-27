@@ -312,12 +312,17 @@ func SliceInSlice(sliceToCheck []string, slice []string) bool {
 }
 
 // GetTypeName to get struct type name
-func GetTypeName(myvar interface{}) string {
+func GetTypeName(myvar interface{}, isToLowerCase bool) string {
+	name := ""
 	t := reflect.TypeOf(myvar)
 	if t.Kind() == reflect.Ptr {
-		return t.Elem().Name()
+		name = t.Elem().Name()
 	}
-	return t.Name()
+	name = t.Name()
+	if isToLowerCase {
+		name = strings.ToLower(name)
+	}
+	return name
 
 }
 

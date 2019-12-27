@@ -44,7 +44,6 @@ func New(runMode string) *Trinity {
 	t.InitDatabase()
 	t.InitRouter()
 	t.InitViewSetCfg()
-	t.migrate()
 	t.initDefaultValue()
 	return t
 }
