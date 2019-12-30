@@ -138,3 +138,9 @@ func (t *Trinity) LoadSetting() {
 	t.setting = &c
 	t.Unlock()
 }
+
+// SettingPath return setting file path
+func (t *Trinity) SettingPath() string {
+	configfile := filepath.Join(t.rootPath, "config", "config.yml")
+	return configfile
+}

@@ -68,7 +68,7 @@ func (t *Trinity) InitDatabase() {
 // updateTimeStampForCreateCallback will set `CreatedOn`, `ModifiedOn` when creating
 func updateTimeStampAndUUIDForCreateCallback(scope *gorm.Scope) {
 	if !scope.HasError() {
-		reqUserKey, ok := scope.Get("reqUserKey")
+		reqUserKey, ok := scope.Get("UserKey")
 		if !ok {
 			reqUserKey = nil
 		}
@@ -100,7 +100,7 @@ func updateTimeStampAndUUIDForCreateCallback(scope *gorm.Scope) {
 // updateTimeStampForUpdateCallback will set `ModifiedOn` when updating
 func updateTimeStampForUpdateCallback(scope *gorm.Scope) {
 	if !scope.HasError() {
-		reqUserKey, ok := scope.Get("reqUserKey")
+		reqUserKey, ok := scope.Get("UserKey")
 		if !ok {
 			reqUserKey = nil
 		}

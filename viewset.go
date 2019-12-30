@@ -194,7 +194,7 @@ func (v *ViewSetRunTime) ViewSetServe() {
 			return
 		}
 	}
-	v.Db = v.Db.Set("reqUserKey", v.Gcontext.GetString("reqUserKey"))
+	v.Db = v.Db.Set("UserKey", v.Gcontext.GetString("UserKey"))
 
 	switch v.Method {
 	case "RETRIEVE":

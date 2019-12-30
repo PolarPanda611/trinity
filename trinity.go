@@ -64,6 +64,14 @@ func (t *Trinity) SetVCfg(newVCfg *ViewSetCfg) {
 	return
 }
 
+// GetRunMode  get RunMode
+func (t *Trinity) GetRunMode() string {
+	t.RLock()
+	r := t.runMode
+	t.RUnlock()
+	return r
+}
+
 // GetSetting  get setting
 func (t *Trinity) GetSetting() *Setting {
 	t.RLock()
