@@ -8,6 +8,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq" //pg
+	uuid "github.com/satori/go.uuid"
 )
 
 //InitDatabase create db connection
@@ -94,6 +95,11 @@ func updateTimeStampAndUUIDForCreateCallback(scope *gorm.Scope) {
 				updateUserField.Set(reqUserKey)
 			}
 		}
+		if updateDVersionField, ok := scope.FieldByName("DVersion"); ok {
+			if updateDVersionField.IsBlank {
+				updateDVersionField.Set(uuid.NewV4().String())
+			}
+		}
 	}
 }
 
@@ -109,11 +115,14 @@ func updateTimeStampForUpdateCallback(scope *gorm.Scope) {
 			updateAttrs = attrs.(map[string]interface{})
 			updateAttrs["updated_time"] = time.Now()
 			updateAttrs["update_user_key"] = reqUserKey
+			updateAttrs["d_version"] = uuid.NewV4().String()
 			scope.InstanceSet("gorm:update_attrs", updateAttrs)
 		}
-		if _, ok := scope.Get("gorm:update_column"); !ok {
-			scope.SetColumn("UpdatedTime", time.Now())
-		}
+		// if _, ok := scope.Get("gorm:update_column"); !ok {
+		// 	scope.SetColumn("UpdatedTime", time.Now())
+		// 	scope.SetColumn("update_user_key", time.Now())
+		// 	scope.SetColumn("d_version", uuid.NewV4().String())
+		// }
 	}
 
 }
@@ -121,18 +130,28 @@ func updateTimeStampForUpdateCallback(scope *gorm.Scope) {
 // deleteCallback will set `DeletedOn` where deleting
 func deleteCallback(scope *gorm.Scope) {
 	if !scope.HasError() {
+		reqUserKey, ok := scope.Get("UserKey")
+		if !ok {
+			reqUserKey = nil
+		}
 		var extraOption string
 		if str, ok := scope.Get("gorm:delete_option"); ok {
 			extraOption = fmt.Sprint(str)
 		}
-		deletedAtField, hasDeletedAtField := scope.FieldByName("DeletedTime")
+		deletedAtField, hasDeletedAtField := scope.FieldByName("deleted_time")
+		deleteUserKeyField, hasDeleteUserKeyField := scope.FieldByName("DeleteUserKey")
+		dVersionField, hasDVersionField := scope.FieldByName("d_version")
 
-		if !scope.Search.Unscoped && hasDeletedAtField {
+		if !scope.Search.Unscoped && hasDeletedAtField && hasDVersionField && hasDeleteUserKeyField {
 			scope.Raw(fmt.Sprintf(
-				"UPDATE %v SET %v=%v%v%v",
+				"UPDATE %v SET %v=%v,%v=%v,%v=%v%v%v",
 				scope.QuotedTableName(),
 				scope.Quote(deletedAtField.DBName),
 				scope.AddToVars(time.Now()),
+				scope.Quote(deleteUserKeyField.DBName),
+				scope.AddToVars(reqUserKey),
+				scope.Quote(dVersionField.DBName),
+				scope.AddToVars(uuid.NewV4().String()),
 				addExtraSpaceIfExist(scope.CombinedConditionSql()),
 				addExtraSpaceIfExist(extraOption),
 			)).Exec()

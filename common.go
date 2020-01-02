@@ -17,6 +17,7 @@ type Model struct {
 	DeletedTime   *time.Time `json:"deleted_time" sql:"index;"`
 	DeleteUser    *User      `json:"delete_user" gorm:"AssociationForeignKey:DeleteUserKey;ForeignKey:Key;"`
 	DeleteUserKey *string    `json:"delete_user_key" gorm:"type:varchar(50);not null;default:'';" `
+	DVersion      string     `json:"d_version" gorm:"type:varchar(50);not null;default:'';" `
 }
 
 //Simpmodel common type

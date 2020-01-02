@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"math"
 	"strconv"
-	"time"
 
 	"github.com/jinzhu/gorm"
 )
@@ -138,16 +137,12 @@ func PatchResource(r *PatchMixin) {
 
 // DeleteResource : DELETE method
 func DeleteResource(r *DeleteMixin) {
-	requestbodyMap := make(map[string]interface{})
-	nowTime := time.Now()
-	requestbodyMap["deleted_time"] = nowTime
-	requestbodyMap["delete_user_key"] = r.ViewSetRunTime.Gcontext.GetString("UserKey")
 	if err := r.ViewSetRunTime.Db.Scopes(
 		r.ViewSetRunTime.DBFilterBackend,
 		FilterByParam(r.ViewSetRunTime.Gcontext.Params.ByName("key")),
 		FilterByFilter(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.FilterByList, r.ViewSetRunTime.FilterCustomizeFunc),
 		FilterBySearch(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.SearchingByList),
-	).Table(r.ViewSetRunTime.ResourceTableName).Updates(requestbodyMap).Error; err != nil {
+	).Table(r.ViewSetRunTime.ResourceTableName).Delete(r.ViewSetRunTime.ModelSerializer).Error; err != nil {
 		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrDeleteDataFailed)
 		return
 	}
