@@ -125,6 +125,8 @@ func PatchResource(r *PatchMixin) {
 	if err := r.ViewSetRunTime.Db.Scopes(
 		r.ViewSetRunTime.DBFilterBackend,
 		FilterByParam(r.ViewSetRunTime.Gcontext.Params.ByName("key")),
+		FilterByFilter(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.FilterByList, r.ViewSetRunTime.FilterCustomizeFunc),
+		FilterBySearch(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.SearchingByList),
 	).Table(r.ViewSetRunTime.ResourceTableName).Updates(requestbodyMap).First(r.ViewSetRunTime.ModelSerializer).Error; err != nil {
 		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrUpdateDataFailed)
 		return
@@ -143,6 +145,8 @@ func DeleteResource(r *DeleteMixin) {
 	if err := r.ViewSetRunTime.Db.Scopes(
 		r.ViewSetRunTime.DBFilterBackend,
 		FilterByParam(r.ViewSetRunTime.Gcontext.Params.ByName("key")),
+		FilterByFilter(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.FilterByList, r.ViewSetRunTime.FilterCustomizeFunc),
+		FilterBySearch(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.SearchingByList),
 	).Table(r.ViewSetRunTime.ResourceTableName).Updates(requestbodyMap).Error; err != nil {
 		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrDeleteDataFailed)
 		return
