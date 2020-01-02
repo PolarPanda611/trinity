@@ -84,7 +84,11 @@ func updateTimeStampAndUUIDForCreateCallback(scope *gorm.Scope) {
 				createUserField.Set(reqUserKey)
 			}
 		}
-
+		if keyField, ok := scope.FieldByName("Key"); ok {
+			if keyField.IsBlank {
+				keyField.Set(uuid.NewV4().String())
+			}
+		}
 		if modifyTimeField, ok := scope.FieldByName("UpdatedTime"); ok {
 			if modifyTimeField.IsBlank {
 				modifyTimeField.Set(nowTime)
@@ -95,6 +99,7 @@ func updateTimeStampAndUUIDForCreateCallback(scope *gorm.Scope) {
 				updateUserField.Set(reqUserKey)
 			}
 		}
+
 		if updateDVersionField, ok := scope.FieldByName("DVersion"); ok {
 			if updateDVersionField.IsBlank {
 				updateDVersionField.Set(uuid.NewV4().String())
