@@ -88,6 +88,7 @@ func GetResourceList(r *GetMixin) {
 			FilterBySearch(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.SearchingByList),
 			QueryBySelect(r.ViewSetRunTime.Gcontext),
 			QueryByOrdering(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.OrderingByList),
+			QueryByPreload(r.ViewSetRunTime.PreloadList),
 		).Table(r.ViewSetRunTime.ResourceTableName).Find(r.ViewSetRunTime.ModelSerializerlist).Error; err != nil {
 			r.ViewSetRunTime.HandleResponse(400, nil, err, ErrLoadDataFailed)
 			return
