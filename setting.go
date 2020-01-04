@@ -1,8 +1,6 @@
 package trinity
 
 import (
-	"path/filepath"
-
 	"github.com/PolarPanda611/reflections"
 	"github.com/jinzhu/configor"
 )
@@ -150,10 +148,4 @@ func (t *Trinity) loadSetting(customizeSettingSlice ...CustomizeSetting) {
 		v.Load(t.runMode, t.configFilePath)
 	}
 
-}
-
-// SettingPath return setting file path
-func (t *Trinity) SettingPath() string {
-	configfile := filepath.Join(t.rootPath, "config", "config.yml")
-	return configfile
 }

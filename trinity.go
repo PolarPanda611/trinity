@@ -13,8 +13,16 @@ import (
 
 var (
 	// GlobalTrinity global instance
-	GlobalTrinity *Trinity
+	GlobalTrinity  *Trinity
+	runMode        = "Local"
+	rootPath       string
+	configFilePath string
 )
+
+func init() {
+	rootPath, _ = os.Getwd()
+	configFilePath = filepath.Join(rootPath, "config", "config.yml")
+}
 
 // Trinity struct for app subconfig
 type Trinity struct {
@@ -24,7 +32,7 @@ type Trinity struct {
 	setting        *Setting
 	db             *gorm.DB
 	vCfg           *ViewSetCfg
-	rootPath       string
+	rootpath       string
 	configFilePath string
 	logger         Logger
 }
@@ -33,14 +41,43 @@ func (t *Trinity) initDefaultValue() {
 	GlobalTrinity = t
 }
 
+// GetRootPath  get rootpath
+func GetRootPath() string {
+	return rootPath
+}
+
+// SetRootPath  get rootpath
+func SetRootPath(path string) {
+	rootPath = path
+}
+
+// GetConfigFilePath  get rootpath
+func GetConfigFilePath() string {
+	return configFilePath
+}
+
+// SetConfigFilePath  get rootpath
+func SetConfigFilePath(path string) {
+	configFilePath = path
+}
+
+// GetRunMode  get RunMode
+func GetRunMode() string {
+	return runMode
+}
+
+// SetRunMode  set RunMode
+func SetRunMode(runmode string) {
+	runMode = runmode
+}
+
 // New app
 // initial global trinity object
-func New(runMode string, customizeSettingSlice ...CustomizeSetting) *Trinity {
-	rootPath, _ := os.Getwd()
+func New(customizeSettingSlice ...CustomizeSetting) *Trinity {
 	t := &Trinity{
 		runMode:        runMode,
-		rootPath:       rootPath,
-		configFilePath: filepath.Join(rootPath, "config", "config.yml"),
+		rootpath:       rootPath,
+		configFilePath: configFilePath,
 	}
 	t.Lock()
 	t.loadSetting(customizeSettingSlice...)
@@ -93,23 +130,6 @@ func (t *Trinity) SetVCfg(newVCfg *ViewSetCfg) *Trinity {
 	return t
 }
 
-// GetRunMode  get RunMode
-func (t *Trinity) GetRunMode() string {
-	t.RLock()
-	r := t.runMode
-	t.RUnlock()
-	return r
-}
-
-// SetRunMode  set RunMode
-func (t *Trinity) SetRunMode(runMode string) *Trinity {
-	t.RLock()
-	t.runMode = runMode
-	t.reloadTrinity()
-	t.RUnlock()
-	return t
-}
-
 // GetSetting  get setting
 func (t *Trinity) GetSetting() *Setting {
 	t.RLock()
@@ -156,23 +176,6 @@ func (t *Trinity) GetDB() *gorm.DB {
 func (t *Trinity) SetDB(db *gorm.DB) *Trinity {
 	t.Lock()
 	t.db = db
-	t.reloadTrinity()
-	t.Unlock()
-	return t
-}
-
-// GetRootPath  get rootpath
-func (t *Trinity) GetRootPath() string {
-	t.RLock()
-	r := t.rootPath
-	t.RUnlock()
-	return r
-}
-
-// SetRootPath  get rootpath
-func (t *Trinity) SetRootPath(rootPath string) *Trinity {
-	t.Lock()
-	t.rootPath = rootPath
 	t.reloadTrinity()
 	t.Unlock()
 	return t

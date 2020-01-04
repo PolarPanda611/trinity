@@ -49,5 +49,5 @@ func LoadConfigError(err error) {
 
 // WrongRunMode load config error
 func WrongRunMode(runmode string) {
-	log.Fatalf("wrong runmode :%v , should be local ,develop , preprod or master ", runmode)
+	log.Fatalf("wrong runmode :%v , should be Local ,Develop , Preprod or Master ", runmode)
 }
