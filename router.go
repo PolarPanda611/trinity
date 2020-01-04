@@ -9,8 +9,8 @@ import (
 	"github.com/swaggo/gin-swagger/swaggerFiles"
 )
 
-// InitRouter initial router
-func (t *Trinity) InitRouter() {
+// initRouter initial router
+func (t *Trinity) initRouter() {
 	// Creates a router without any middleware by default
 	r := gin.New()
 	r.Use(LoggerWithFormatter())
@@ -53,9 +53,7 @@ func (t *Trinity) InitRouter() {
 			})
 		}
 	})
-	t.Lock()
 	t.router = r
-	t.Unlock()
 }
 
 // NewAPIGroup register new apigroup

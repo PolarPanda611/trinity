@@ -1,13 +1,16 @@
 package trinity
 
 import (
-	"errors"
-	"io/ioutil"
-	"log"
 	"path/filepath"
 
-	"gopkg.in/yaml.v2"
+	"github.com/PolarPanda611/reflections"
+	"github.com/jinzhu/configor"
 )
+
+// CustomizeSetting for customize setting
+type CustomizeSetting interface {
+	Load(runmode string, configFilePath string)
+}
 
 // Setting : for trinity setting
 type Setting struct {
@@ -118,25 +121,35 @@ type Setting struct {
 	}
 }
 
-// LoadSetting used for load app config file
-func (t *Trinity) LoadSetting() {
-	configfile := filepath.Join(t.rootPath, "config", "config.yml")
-	f, cerr := ioutil.ReadFile(configfile)
-	if cerr != nil {
-		log.Fatal("Load config error", cerr)
-	}
-	m := make(map[string]Setting)
-	err := yaml.Unmarshal([]byte(f), &m)
+// GlobalSetting : for trinity global setting
+type GlobalSetting struct {
+	Local   Setting
+	Develop Setting
+	Preprod Setting
+	Master  Setting
+}
+
+// loadSetting used for load trinity config file by default and customize setting if necessery
+func (t *Trinity) loadSetting(customizeSettingSlice ...CustomizeSetting) {
+
+	// load global setting for trinity
+	g := GlobalSetting{}
+	err := configor.Load(&g, t.configFilePath)
 	if err != nil {
-		log.Fatalf("error: %v", err)
+		LoadConfigError(err)
 	}
-	c, found := m[t.runMode]
-	if !found {
-		log.Fatalf("error: %v", errors.New("config not found"))
+	currentSettingInterface, err := reflections.GetField(g, t.runMode)
+	if err != nil {
+		WrongRunMode(t.runMode)
 	}
-	t.Lock()
-	t.setting = &c
-	t.Unlock()
+	currentSetting, _ := currentSettingInterface.(Setting)
+	t.setting = &currentSetting
+
+	// load customize setting for application
+	for _, v := range customizeSettingSlice {
+		v.Load(t.runMode, t.configFilePath)
+	}
+
 }
 
 // SettingPath return setting file path

@@ -3,6 +3,7 @@ package trinity
 import (
 	"net/http"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -18,13 +19,14 @@ var (
 // Trinity struct for app subconfig
 type Trinity struct {
 	sync.RWMutex
-	runMode  string
-	router   *gin.Engine
-	setting  *Setting
-	db       *gorm.DB
-	vCfg     *ViewSetCfg
-	rootPath string
-	logger   Logger
+	runMode        string
+	router         *gin.Engine
+	setting        *Setting
+	db             *gorm.DB
+	vCfg           *ViewSetCfg
+	rootPath       string
+	configFilePath string
+	logger         Logger
 }
 
 func (t *Trinity) initDefaultValue() {
@@ -33,19 +35,45 @@ func (t *Trinity) initDefaultValue() {
 
 // New app
 // initial global trinity object
-func New(runMode string) *Trinity {
+func New(runMode string, customizeSettingSlice ...CustomizeSetting) *Trinity {
 	rootPath, _ := os.Getwd()
 	t := &Trinity{
-		runMode:  runMode,
-		rootPath: rootPath,
+		runMode:        runMode,
+		rootPath:       rootPath,
+		configFilePath: filepath.Join(rootPath, "config", "config.yml"),
 	}
-	t.LoadSetting()
-	t.InitLogger()
+	t.Lock()
+	t.loadSetting(customizeSettingSlice...)
+	t.initLogger()
 	t.InitDatabase()
-	t.InitRouter()
-	t.InitViewSetCfg()
+	t.initRouter()
+	t.initViewSetCfg()
 	t.initDefaultValue()
+	t.Unlock()
 	return t
+}
+
+// Reload  reload trinity
+func (t *Trinity) Reload(runMode string) {
+	t.RLock()
+	t.runMode = runMode
+	t.loadSetting()
+	t.initLogger()
+	t.InitDatabase()
+	t.initRouter()
+	t.initViewSetCfg()
+	t.initDefaultValue()
+	t.RUnlock()
+}
+
+// reloadTrinity for reload some config
+func (t *Trinity) reloadTrinity() {
+	t.loadSetting()
+	t.initLogger()
+	t.InitDatabase()
+	t.initRouter()
+	t.initViewSetCfg()
+	t.initDefaultValue()
 }
 
 // GetVCfg  get vcfg
@@ -57,11 +85,12 @@ func (t *Trinity) GetVCfg() *ViewSetCfg {
 }
 
 // SetVCfg  get vcfg
-func (t *Trinity) SetVCfg(newVCfg *ViewSetCfg) {
+func (t *Trinity) SetVCfg(newVCfg *ViewSetCfg) *Trinity {
 	t.Lock()
 	t.vCfg = newVCfg
+	t.reloadTrinity()
 	t.Unlock()
-	return
+	return t
 }
 
 // GetRunMode  get RunMode
@@ -72,6 +101,15 @@ func (t *Trinity) GetRunMode() string {
 	return r
 }
 
+// SetRunMode  set RunMode
+func (t *Trinity) SetRunMode(runMode string) *Trinity {
+	t.RLock()
+	t.runMode = runMode
+	t.reloadTrinity()
+	t.RUnlock()
+	return t
+}
+
 // GetSetting  get setting
 func (t *Trinity) GetSetting() *Setting {
 	t.RLock()
@@ -80,11 +118,13 @@ func (t *Trinity) GetSetting() *Setting {
 	return s
 }
 
-// SetSetting  get setting
-func (t *Trinity) SetSetting(s *Setting) {
+// SetSetting  set setting
+func (t *Trinity) SetSetting(s *Setting) *Trinity {
 	t.RLock()
 	t.setting = s
+	t.reloadTrinity()
 	t.RUnlock()
+	return t
 }
 
 // GetRouter  get router
@@ -96,11 +136,12 @@ func (t *Trinity) GetRouter() *gin.Engine {
 }
 
 // SetRouter  set router
-func (t *Trinity) SetRouter(newRouter *gin.Engine) {
+func (t *Trinity) SetRouter(newRouter *gin.Engine) *Trinity {
 	t.Lock()
 	t.router = newRouter
+	t.reloadTrinity()
 	t.Unlock()
-	return
+	return t
 }
 
 // GetDB  get db instance
@@ -112,18 +153,46 @@ func (t *Trinity) GetDB() *gorm.DB {
 }
 
 // SetDB  set db instance
-func (t *Trinity) SetDB(db *gorm.DB) {
+func (t *Trinity) SetDB(db *gorm.DB) *Trinity {
 	t.Lock()
 	t.db = db
+	t.reloadTrinity()
 	t.Unlock()
-	return
+	return t
 }
 
-// Migrate run migration mode
-func Migrate(runMode string) {
-	New(runMode)
-	return
+// GetRootPath  get rootpath
+func (t *Trinity) GetRootPath() string {
+	t.RLock()
+	r := t.rootPath
+	t.RUnlock()
+	return r
+}
 
+// SetRootPath  get rootpath
+func (t *Trinity) SetRootPath(rootPath string) *Trinity {
+	t.Lock()
+	t.rootPath = rootPath
+	t.reloadTrinity()
+	t.Unlock()
+	return t
+}
+
+// GetConfigFilePath  get rootpath
+func (t *Trinity) GetConfigFilePath() string {
+	t.RLock()
+	r := t.configFilePath
+	t.RUnlock()
+	return r
+}
+
+// SetConfigFilePath  get rootpath
+func (t *Trinity) SetConfigFilePath(configFilePath string) *Trinity {
+	t.Lock()
+	t.configFilePath = configFilePath
+	t.reloadTrinity()
+	t.Unlock()
+	return t
 }
 
 // Serve http

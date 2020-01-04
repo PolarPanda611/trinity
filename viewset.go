@@ -5,8 +5,8 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// InitViewSetCfg for  initial ViewSetCfg
-func (t *Trinity) InitViewSetCfg() {
+// initViewSetCfg for  initial ViewSetCfg
+func (t *Trinity) initViewSetCfg() {
 	v := &ViewSetCfg{
 		Db:         t.db,
 		HasAuthCtl: false,
@@ -58,9 +58,7 @@ func (t *Trinity) InitViewSetCfg() {
 		OrderingByList:      map[string]bool{},
 		PageSize:            10,
 	}
-	t.Lock()
 	t.vCfg = v
-	t.Unlock()
 
 }
 
@@ -97,6 +95,9 @@ func NewViewSet() *ViewSetCfg {
 }
 
 // NewRunTime : new the run time with the default config
+// ResourceModel : the main resource model . decide the access authorization and the table name for the resource
+// ModelSerializer : the serializer model  , used for retrieve , post and patch service,
+// ModelSerializerlist : the serializer model , used for get
 func (v *ViewSetCfg) NewRunTime(c *gin.Context, ResourceModel interface{}, ModelSerializer interface{}, ModelSerializerlist interface{}) *ViewSetRunTime {
 	httpMethod := GetRequestType(c)
 	resourceName := GetTypeName(ResourceModel, true)

@@ -60,9 +60,7 @@ func (t *Trinity) InitDatabase() {
 
 	db.DB().SetMaxIdleConns(t.setting.Database.DbMaxIdleConn)
 	db.DB().SetMaxOpenConns(t.setting.Database.DbMaxOpenConn)
-	t.Lock()
 	t.db = db
-	t.Unlock()
 
 }
 

@@ -86,7 +86,7 @@ func CustomizeLogFormatter(params LogFormatterParams) string {
 }
 
 // InitLogger initial logger
-func (t *Trinity) InitLogger() {
+func (t *Trinity) initLogger() {
 	gin.SetMode(t.setting.Log.GinMode)
 	runmode := gin.Mode()
 	if runmode == "release" {
@@ -115,9 +115,7 @@ func (t *Trinity) InitLogger() {
 	} else {
 		gin.DefaultWriter = io.MultiWriter(os.Stderr)
 	}
-	t.Lock()
 	t.logger = &defaultLogger{}
-	t.Unlock()
 }
 
 // LogWriter log

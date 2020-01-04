@@ -1,6 +1,9 @@
 package trinity
 
-import "errors"
+import (
+	"errors"
+	"log"
+)
 
 var (
 
@@ -38,3 +41,13 @@ var (
 	// ErrUnknownService  app.error.UnknownService
 	ErrUnknownService = errors.New("app.error.UnknownService")
 )
+
+// LoadConfigError load config error log fatal
+func LoadConfigError(err error) {
+	log.Fatalf("load config error: %v", err)
+}
+
+// WrongRunMode load config error
+func WrongRunMode(runmode string) {
+	log.Fatalf("wrong runmode :%v , should be local ,develop , preprod or master ", runmode)
+}
