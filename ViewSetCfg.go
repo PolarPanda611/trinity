@@ -30,10 +30,10 @@ type ViewSetRunTime struct {
 	// HasAuthCtl
 	// if do the auth check ,default false
 	HasAuthCtl            bool
-	AuthenticationBackend func(c *gin.Context) (error, error)
+	AuthenticationBackend func(c *gin.Context) error
 	GetCurrentUserAuth    interface{}
 	AccessBackendRequire  []string
-	AccessBackendCheck    func(v *ViewSetRunTime) (error, error)
+	AccessBackendCheck    func(v *ViewSetRunTime) error
 	DBFilterBackend       func(db *gorm.DB) *gorm.DB // current dbfilterbackend
 	PreloadList           []string
 	FilterBackend         func(c *gin.Context, db *gorm.DB) *gorm.DB
@@ -75,7 +75,7 @@ type ViewSetCfg struct {
 	// if HasAuthCtl == false ; pass... customize the authentication check , default jwt  ;
 	// please set UserID in context
 	// e.g : c.Set("UserID", tokenClaims.UID)
-	AuthenticationBackendMap map[string]func(c *gin.Context) (error, error)
+	AuthenticationBackendMap map[string]func(c *gin.Context) error
 	// GetCurrentUserAuth
 	// must be type : func(c *gin.Context, db *gorm.DB) error
 	// if HasAuthCtl == false ; pass...
@@ -92,7 +92,7 @@ type ViewSetCfg struct {
 	// e.g : userPermission :=  c.GetString("UserPermission")
 	// e.g : requiredPermission := []string{"123"} get with AccessBackendReqMap by default
 	// e.g : trinity.CheckAccessAuthorization(requiredPermission , userPermission) , true?allow:deny
-	AccessBackendCheckMap map[string]func(v *ViewSetRunTime) (error, error)
+	AccessBackendCheckMap map[string]func(v *ViewSetRunTime) error
 	// PreloadListMap gorm preload list
 	PreloadListMap map[string][]string
 	// FilterBackendMap : all the query will with this filter backend

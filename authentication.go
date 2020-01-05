@@ -89,56 +89,56 @@ func JwtAuthBackend(c *gin.Context) (error, error) {
 }
 
 // ParseUnverifiedToken parsing token
-func ParseUnverifiedToken(token string) (*FedidClaims, error, error) {
+func ParseUnverifiedToken(token string) (*FedidClaims, error) {
 	p := new(jwt.Parser)
 	p.SkipClaimsValidation = true
 	claim := FedidClaims{}
 	_, _, err := p.ParseUnverified(token, &claim)
 	if err != nil {
-		return nil, err, ErrUnverifiedToken
+		return nil, err
 	}
 	if GlobalTrinity.setting.Security.Authentication.JwtVerifyExpireHour {
 		if !claim.StandardClaims.VerifyExpiresAt(time.Now().Unix(), true) {
-			return nil, ErrTokenExpired, ErrUnverifiedToken
+			return nil, ErrTokenExpired
 		}
 	}
 	if GlobalTrinity.setting.Security.Authentication.JwtVerifyIssuer {
 		if !claim.StandardClaims.VerifyIssuer(GlobalTrinity.setting.Security.Authentication.JwtIssuer, true) {
-			return nil, ErrTokenWrongIssuer, ErrUnverifiedToken
+			return nil, ErrTokenWrongIssuer
 		}
 	}
 
-	return &claim, nil, nil
+	return &claim, nil
 
 }
 
 // CheckUnverifiedTokenValid check authorization header token is valid
-func CheckUnverifiedTokenValid(c *gin.Context) (*FedidClaims, error, error) {
+func CheckUnverifiedTokenValid(c *gin.Context) (*FedidClaims, error) {
 	if c.Request.Header.Get("Authorization") == "" || len(strings.Fields(c.Request.Header.Get("Authorization"))) != 2 {
-		return nil, ErrTokenWrongAuthorization, ErrUnverifiedToken
+		return nil, ErrTokenWrongAuthorization
 	}
 	prefix := strings.Fields(c.Request.Header.Get("Authorization"))[0]
 	token := strings.Fields(c.Request.Header.Get("Authorization"))[1]
 	if prefix != GlobalTrinity.setting.Security.Authentication.JwtHeaderPrefix {
-		return nil, ErrTokenWrongHeaderPrefix, ErrUnverifiedToken
+		return nil, ErrTokenWrongHeaderPrefix
 	}
-	tokenClaims, rErr, uErr := ParseUnverifiedToken(token)
-	if rErr != nil {
-		return nil, rErr, uErr
+	tokenClaims, err := ParseUnverifiedToken(token)
+	if err != nil {
+		return nil, err
 	}
 	if !tokenClaims.StandardClaims.VerifyIssuer(GlobalTrinity.setting.Security.Authentication.JwtIssuer, true) {
-		return nil, ErrTokenWrongIssuer, ErrUnverifiedToken
+		return nil, ErrTokenWrongIssuer
 	}
-	return tokenClaims, nil, nil
+	return tokenClaims, nil
 }
 
 // JwtUnverifiedAuthBackend get claim info
-func JwtUnverifiedAuthBackend(c *gin.Context) (rErr, uErr error) {
-	tokenClaims, rErr, uErr := CheckUnverifiedTokenValid(c)
-	if rErr != nil {
-		return rErr, uErr
+func JwtUnverifiedAuthBackend(c *gin.Context) error {
+	tokenClaims, err := CheckUnverifiedTokenValid(c)
+	if err != nil {
+		return err
 	}
 	c.Set("UserID", tokenClaims.UID)
-	return nil, nil
+	return nil
 
 }

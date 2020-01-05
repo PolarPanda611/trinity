@@ -22,7 +22,7 @@ func (t *Trinity) initRouter() {
 			ExposeHeaders:    t.setting.Security.Cors.ExposeHeaders,
 			AllowCredentials: t.setting.Security.Cors.AllowCredentials,
 			AllowOriginFunc: func(origin string) bool {
-				return origin == "https://github.com"
+				return origin == "http://github.com"
 			},
 			MaxAge: time.Duration(t.setting.Security.Cors.MaxAgeHour) * time.Hour,
 		}))

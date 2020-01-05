@@ -18,7 +18,7 @@ func (t *Trinity) initViewSetCfg() {
 			"PUT":      t.setting.Webapp.AtomicRequest,
 			"DELETE":   t.setting.Webapp.AtomicRequest,
 		},
-		AuthenticationBackendMap: map[string]func(c *gin.Context) (error, error){
+		AuthenticationBackendMap: map[string]func(c *gin.Context) error{
 			"RETRIEVE": JwtUnverifiedAuthBackend,
 			"GET":      JwtUnverifiedAuthBackend,
 			"POST":     JwtUnverifiedAuthBackend,
@@ -26,13 +26,13 @@ func (t *Trinity) initViewSetCfg() {
 			"PUT":      JwtUnverifiedAuthBackend,
 			"DELETE":   JwtUnverifiedAuthBackend,
 		},
-		GetCurrentUserAuth: func(c *gin.Context, db *gorm.DB) (error, error) {
+		GetCurrentUserAuth: func(c *gin.Context, db *gorm.DB) error {
 			c.Set("UserKey", "")                // with  c.GetString("UserID")
 			c.Set("UserPermission", []string{}) // with  c.GetString("UserID")
-			return nil, nil
+			return nil
 		},
 		AccessBackendRequireMap: map[string][]string{},
-		AccessBackendCheckMap: map[string]func(v *ViewSetRunTime) (error, error){
+		AccessBackendCheckMap: map[string]func(v *ViewSetRunTime) error{
 			"RETRIEVE": DefaultAccessBackend,
 			"GET":      DefaultAccessBackend,
 			"POST":     DefaultAccessBackend,
@@ -56,7 +56,7 @@ func (t *Trinity) initViewSetCfg() {
 		FilterCustomizeFunc: map[string]func(db *gorm.DB, queryValue string) *gorm.DB{},
 		SearchingByList:     []string{},
 		OrderingByList:      map[string]bool{},
-		PageSize:            10,
+		PageSize:            t.setting.Webapp.PageSize,
 	}
 	t.vCfg = v
 
@@ -172,26 +172,26 @@ func (v *ViewSetRunTime) ViewSetServe() {
 	var ch func(r *ViewSetRunTime) // Customize Handler
 	// first level : authentication control
 	if v.HasAuthCtl {
-		rErr, uErr := v.AuthenticationBackend(v.Gcontext)
+		err := v.AuthenticationBackend(v.Gcontext)
 		// if err return 401 unauthorized
-		if rErr != nil {
-			v.HandleResponse(401, nil, rErr, uErr)
+		if err != nil {
+			v.HandleResponse(401, nil, err, ErrUnverifiedToken)
 			return
 		}
 		// get user auth
-		getCurrentUserAuth, ok := v.GetCurrentUserAuth.(func(c *gin.Context, db *gorm.DB) (error, error))
+		getCurrentUserAuth, ok := v.GetCurrentUserAuth.(func(c *gin.Context, db *gorm.DB) error)
 		if !ok {
 			v.HandleResponse(401, nil, ErrGetUserAuth, ErrGetUserAuth)
 			return
 		}
-		rErr, uErr = getCurrentUserAuth(v.Gcontext, v.Db)
-		if rErr != nil {
-			v.HandleResponse(401, nil, rErr, uErr)
+		err = getCurrentUserAuth(v.Gcontext, v.Db)
+		if err != nil {
+			v.HandleResponse(401, nil, err, ErrGetUserAuth)
 			return
 		}
 		// Access control
-		if rErr, uErr := v.AccessBackendCheck(v); rErr != nil {
-			v.HandleResponse(401, nil, rErr, uErr)
+		if err := v.AccessBackendCheck(v); err != nil {
+			v.HandleResponse(401, nil, err, ErrAccessAuthCheckFailed)
 			return
 		}
 	}
