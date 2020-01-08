@@ -63,7 +63,7 @@ type ViewSetRunTime struct {
 
 // ViewSetCfg for viewset config
 type ViewSetCfg struct {
-	sync.RWMutex
+	mu sync.RWMutex
 	// global config
 	Db *gorm.DB
 	// if do the atomic request

@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bluele/gcache"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 )
@@ -26,7 +27,7 @@ func init() {
 
 // Trinity struct for app subconfig
 type Trinity struct {
-	sync.RWMutex
+	mu             sync.RWMutex
 	runMode        string
 	router         *gin.Engine
 	setting        *Setting
@@ -35,6 +36,7 @@ type Trinity struct {
 	rootpath       string
 	configFilePath string
 	logger         Logger
+	cache          gcache.Cache
 }
 
 func (t *Trinity) initDefaultValue() {
@@ -79,20 +81,21 @@ func New(customizeSettingSlice ...CustomizeSetting) *Trinity {
 		rootpath:       rootPath,
 		configFilePath: configFilePath,
 	}
-	t.Lock()
+	t.mu.Lock()
 	t.loadSetting(customizeSettingSlice...)
 	t.initLogger()
 	t.InitDatabase()
 	t.initRouter()
 	t.initViewSetCfg()
 	t.initDefaultValue()
-	t.Unlock()
+	t.cache = gcache.New(t.setting.Cache.Gcache.CacheSize).LRU().Expiration(time.Duration(t.setting.Cache.Gcache.Timeout) * time.Hour).Build()
+	t.mu.Unlock()
 	return t
 }
 
 // Reload  reload trinity
 func (t *Trinity) Reload(runMode string) {
-	t.RLock()
+	t.mu.RLock()
 	t.runMode = runMode
 	t.loadSetting()
 	t.initLogger()
@@ -100,7 +103,7 @@ func (t *Trinity) Reload(runMode string) {
 	t.initRouter()
 	t.initViewSetCfg()
 	t.initDefaultValue()
-	t.RUnlock()
+	t.mu.RUnlock()
 }
 
 // reloadTrinity for reload some config
@@ -115,86 +118,102 @@ func (t *Trinity) reloadTrinity() {
 
 // GetVCfg  get vcfg
 func (t *Trinity) GetVCfg() *ViewSetCfg {
-	t.RLock()
+	t.mu.RLock()
 	v := t.vCfg
-	t.RUnlock()
+	t.mu.RUnlock()
 	return v
+}
+
+// GetCache  get vcfg
+func (t *Trinity) GetCache() gcache.Cache {
+	t.mu.RLock()
+	c := t.cache
+	t.mu.RUnlock()
+	return c
+}
+
+// SetCache  get vcfg
+func (t *Trinity) SetCache(cache gcache.Cache) *Trinity {
+	t.mu.Lock()
+	t.cache = cache
+	t.mu.Unlock()
+	return t
 }
 
 // SetVCfg  get vcfg
 func (t *Trinity) SetVCfg(newVCfg *ViewSetCfg) *Trinity {
-	t.Lock()
+	t.mu.Lock()
 	t.vCfg = newVCfg
 	t.reloadTrinity()
-	t.Unlock()
+	t.mu.Unlock()
 	return t
 }
 
 // GetSetting  get setting
 func (t *Trinity) GetSetting() *Setting {
-	t.RLock()
+	t.mu.RLock()
 	s := t.setting
-	t.RUnlock()
+	t.mu.RUnlock()
 	return s
 }
 
 // SetSetting  set setting
 func (t *Trinity) SetSetting(s *Setting) *Trinity {
-	t.RLock()
+	t.mu.RLock()
 	t.setting = s
 	t.reloadTrinity()
-	t.RUnlock()
+	t.mu.RUnlock()
 	return t
 }
 
 // GetRouter  get router
 func (t *Trinity) GetRouter() *gin.Engine {
-	t.RLock()
+	t.mu.RLock()
 	r := t.router
-	t.RUnlock()
+	t.mu.RUnlock()
 	return r
 }
 
 // SetRouter  set router
 func (t *Trinity) SetRouter(newRouter *gin.Engine) *Trinity {
-	t.Lock()
+	t.mu.Lock()
 	t.router = newRouter
 	t.reloadTrinity()
-	t.Unlock()
+	t.mu.Unlock()
 	return t
 }
 
 // GetDB  get db instance
 func (t *Trinity) GetDB() *gorm.DB {
-	t.RLock()
+	t.mu.RLock()
 	d := t.db
-	t.RUnlock()
+	t.mu.RUnlock()
 	return d
 }
 
 // SetDB  set db instance
 func (t *Trinity) SetDB(db *gorm.DB) *Trinity {
-	t.Lock()
+	t.mu.Lock()
 	t.db = db
 	t.reloadTrinity()
-	t.Unlock()
+	t.mu.Unlock()
 	return t
 }
 
 // GetConfigFilePath  get rootpath
 func (t *Trinity) GetConfigFilePath() string {
-	t.RLock()
+	t.mu.RLock()
 	r := t.configFilePath
-	t.RUnlock()
+	t.mu.RUnlock()
 	return r
 }
 
 // SetConfigFilePath  get rootpath
 func (t *Trinity) SetConfigFilePath(configFilePath string) *Trinity {
-	t.Lock()
+	t.mu.Lock()
 	t.configFilePath = configFilePath
 	t.reloadTrinity()
-	t.Unlock()
+	t.mu.Unlock()
 	return t
 }
 

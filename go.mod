@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/PolarPanda611/reflections v1.0.0
+	github.com/bluele/gcache v0.0.0-20190518031135-bc40bd653833
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-contrib/cors v1.3.0
 	github.com/gin-gonic/gin v1.5.0
