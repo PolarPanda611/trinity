@@ -31,6 +31,7 @@ p.s: django restframework like :)
 * 自定义排序
 * 自定义查询包含字段
 * 自定义http方法重写
+* 添加了change log
 
 
 ## 安装
@@ -301,6 +302,27 @@ func Response(r *ViewSetRunTime) {
 		webapp:
 			...
 			atomicrequest: true
+``` 
+
+   * 添加change log
+```
+	migrate  		&trinity.AppChangelog{}, 
+
+	在viewset中
+	// PartsViewSet hanlde router
+	func PartsViewSet(c *gin.Context) {
+
+		v := trinity.NewViewSet()
+		v.HasAuthCtl = true
+		v.EnableChangeLog = true
+		v.NewRunTime(
+			c,
+			&model.Part{},
+			&model.Part{},
+			&[]model.Part{},
+		).ViewSetServe()
+	}
+
 ``` 
 
 
