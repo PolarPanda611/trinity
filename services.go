@@ -155,14 +155,15 @@ func PatchResource(r *PatchMixin) {
 				continue
 			}
 			changeLog := AppChangelog{
-				Logmodel: Logmodel{CreateUserKey: &userKey},
-				Resource: r.ViewSetRunTime.ResourceTableName,
-				Type:     "Update",
-				Column:   k,
-				OldValue: oldValue,
-				NewValue: newValue,
-				DVersion: oldDataMap["d_version"],
-				TraceID:  r.ViewSetRunTime.Gcontext.GetString("TraceID"),
+				Logmodel:    Logmodel{CreateUserKey: &userKey},
+				Resource:    r.ViewSetRunTime.ResourceTableName,
+				Type:        "Update",
+				Column:      k,
+				OldValue:    oldValue,
+				NewValue:    newValue,
+				DVersion:    oldDataMap["d_version"],
+				TraceID:     r.ViewSetRunTime.Gcontext.GetString("TraceID"),
+				ResourceKey: r.ViewSetRunTime.Gcontext.Params.ByName("key"),
 			}
 			if err := r.ViewSetRunTime.Db.Create(&changeLog).Error; err != nil {
 				r.ViewSetRunTime.HandleResponse(400, nil, err, ErrUpdateDataFailed)
