@@ -102,7 +102,7 @@ type Setting struct {
 		}
 		Gcache struct {
 			CacheSize int `yaml:"cachesize"`
-			Timeout   int `yaml:"timeout"`
+			Timeout   int `yaml:"timeout"` // hour
 		}
 	}
 	Database struct {

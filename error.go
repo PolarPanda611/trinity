@@ -40,6 +40,8 @@ var (
 	ErrDeleteDataFailed = errors.New("app.error.DeleteDataFailed")
 	// ErrUnknownService  app.error.UnknownService
 	ErrUnknownService = errors.New("app.error.UnknownService")
+	// ErrDataAssertion  app.error.DataAssetion
+	ErrDataAssertion = errors.New("app.error.DataAssetion")
 )
 
 // LoadConfigError load config error log fatal

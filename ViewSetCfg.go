@@ -42,6 +42,8 @@ type ViewSetRunTime struct {
 	SearchingByList       []string
 	OrderingByList        map[string]bool
 	PageSize              int
+	EnableChangeLog       bool
+	EnableVersionControl  bool
 	Retrieve              func(r *ViewSetRunTime)
 	Get                   func(r *ViewSetRunTime)
 	Post                  func(r *ViewSetRunTime)
@@ -112,6 +114,10 @@ type ViewSetCfg struct {
 	// PageSize default 10
 	// keyword : PageNum , PageSize to do the limit and offset
 	PageSize int
+	// EnableChangeLog enable change log
+	EnableChangeLog bool
+	// EnableHistory enable history version
+	EnableVersionControl bool
 	// Retrieve: customize retrieve func
 	Retrieve func(r *ViewSetRunTime)
 	// Get: customize Get func

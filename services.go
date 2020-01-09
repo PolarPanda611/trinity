@@ -2,7 +2,9 @@ package trinity
 
 import (
 	"encoding/json"
+	"fmt"
 	"math"
+	"reflect"
 	"strconv"
 
 	"github.com/jinzhu/gorm"
@@ -121,6 +123,51 @@ func PatchResource(r *PatchMixin) {
 	if err := json.Unmarshal(buf[0:n], &requestbodyMap); err != nil {
 		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrResolveDataFailed)
 		return
+	}
+	if r.ViewSetRunTime.EnableChangeLog {
+		searchOldValue := reflect.New(reflect.ValueOf(r.ViewSetRunTime.ModelSerializer).Elem().Type()).Interface()
+		if err := r.ViewSetRunTime.Db.Scopes(
+			r.ViewSetRunTime.DBFilterBackend,
+			FilterByParam(r.ViewSetRunTime.Gcontext.Params.ByName("key")),
+			FilterByFilter(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.FilterByList, r.ViewSetRunTime.FilterCustomizeFunc),
+			FilterBySearch(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.SearchingByList),
+		).Table(r.ViewSetRunTime.ResourceTableName).First(searchOldValue).Error; err != nil {
+			r.ViewSetRunTime.HandleResponse(400, nil, err, ErrUpdateDataFailed)
+			return
+		}
+		v := reflect.ValueOf(searchOldValue).Elem()
+		k := v.Type()
+		oldDataMap := make(map[string]string)
+		for i := 0; i < v.NumField(); i++ {
+			key := gorm.ToColumnName(k.Field(i).Name)
+			val := v.Field(i)
+			oldDataMap[key] = fmt.Sprint(val)
+			model, ok := val.Interface().(Model)
+			if ok {
+				oldDataMap["d_version"] = model.DVersion
+			}
+		}
+		userKey := r.ViewSetRunTime.Gcontext.GetString("UserKey")
+		for k, v := range requestbodyMap {
+			oldValue := oldDataMap[k]
+			newValue := fmt.Sprint(reflect.ValueOf(v))
+			if oldValue == newValue {
+				continue
+			}
+			changeLog := AppChangelog{
+				Logmodel: Logmodel{CreateUserKey: &userKey},
+				Resource: r.ViewSetRunTime.ResourceTableName,
+				Type:     "Update",
+				Column:   k,
+				OldValue: oldValue,
+				NewValue: newValue,
+				DVersion: oldDataMap["d_version"],
+			}
+			r.ViewSetRunTime.Db.Create(&changeLog)
+		}
+	}
+	if r.ViewSetRunTime.EnableVersionControl {
+
 	}
 	if err := r.ViewSetRunTime.Db.Scopes(
 		r.ViewSetRunTime.DBFilterBackend,
