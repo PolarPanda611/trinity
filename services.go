@@ -164,7 +164,10 @@ func PatchResource(r *PatchMixin) {
 				DVersion: oldDataMap["d_version"],
 				TraceID:  r.ViewSetRunTime.Gcontext.GetString("TraceID"),
 			}
-			r.ViewSetRunTime.Db.Create(&changeLog)
+			if err := r.ViewSetRunTime.Db.Create(&changeLog).Error; err != nil {
+				r.ViewSetRunTime.HandleResponse(400, nil, err, ErrUpdateDataFailed)
+				return
+			}
 		}
 	}
 	if r.ViewSetRunTime.EnableVersionControl {
