@@ -162,6 +162,7 @@ func PatchResource(r *PatchMixin) {
 				OldValue: oldValue,
 				NewValue: newValue,
 				DVersion: oldDataMap["d_version"],
+				TraceID:  r.ViewSetRunTime.Gcontext.GetString("TraceID"),
 			}
 			r.ViewSetRunTime.Db.Create(&changeLog)
 		}

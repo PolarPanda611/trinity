@@ -305,6 +305,7 @@ func Response(r *ViewSetRunTime) {
 ``` 
 
    * 添加change log
+   目前不支持嵌套map添加change log
 ```
 	migrate  		&trinity.AppChangelog{}, 
 
