@@ -84,9 +84,7 @@ func updateTimeStampAndUUIDForCreateCallback(scope *gorm.Scope) {
 			}
 		}
 		if idField, ok := scope.FieldByName("ID"); ok {
-			if idField.IsBlank {
-				idField.Set(GenerateSnowFlakeID(int64(rand.Intn(100))))
-			}
+			idField.Set(GenerateSnowFlakeID(int64(rand.Intn(100))))
 		}
 		if modifyTimeField, ok := scope.FieldByName("UpdatedTime"); ok {
 			if modifyTimeField.IsBlank {
