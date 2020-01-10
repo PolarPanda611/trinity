@@ -6,47 +6,39 @@ import (
 
 //Model common type
 type Model struct {
-	ID            uint       `json:"id"  gorm:"primary_key;"`
-	Key           string     `json:"key" sql:"type:varchar(50);index" gorm:"unique;not null;default:'';"`
-	CreatedTime   time.Time  `json:"created_time" sql:"index;"`
-	CreateUser    *User      `json:"create_user" gorm:"AssociationForeignKey:CreateUserKey;ForeignKey:Key;"`
-	CreateUserKey *string    `json:"create_user_key" gorm:"type:varchar(50);not null;default:'';" `
-	UpdatedTime   time.Time  `json:"updated_time" sql:"index;"`
-	UpdateUser    *User      `json:"update_user" gorm:"AssociationForeignKey:UpdateUserKey;ForeignKey:Key;"`
-	UpdateUserKey *string    `json:"update_user_key" gorm:"type:varchar(50);not null;default:'';" `
-	DeletedTime   *time.Time `json:"deleted_time" sql:"index;"`
-	DeleteUser    *User      `json:"delete_user" gorm:"AssociationForeignKey:DeleteUserKey;ForeignKey:Key;"`
-	DeleteUserKey *string    `json:"delete_user_key" gorm:"type:varchar(50);not null;default:'';" `
-	DVersion      string     `json:"d_version" gorm:"type:varchar(50);not null;default:'';" `
+	ID           int64      `json:"id"  gorm:"primary_key;AUTO_INCREMENT:false"`
+	CreatedTime  time.Time  `json:"created_time"`
+	CreateUser   *User      `json:"create_user"`
+	CreateUserID int64      `json:"create_user_id"`
+	UpdatedTime  time.Time  `json:"updated_time"`
+	UpdateUser   *User      `json:"update_user"`
+	UpdateUserID int64      `json:"update_user_id"`
+	DeletedTime  *time.Time `json:"deleted_time"`
+	DeleteUser   *User      `json:"delete_user"`
+	DeleteUserID int64      `json:"delete_user_id"`
+	DVersion     string     `json:"d_version"`
 }
 
 //Simpmodel common type
 type Simpmodel struct {
-	ID          uint      `json:"id"  gorm:"primary_key;"`
-	CreatedTime time.Time `json:"created_time" sql:"index;"`
+	ID          int64     `json:"id"  gorm:"primary_key;AUTO_INCREMENT:false"`
+	CreatedTime time.Time `json:"created_time" `
 }
 
 //Logmodel common type
 type Logmodel struct {
-	ID            uint      `json:"id,omitempty"  gorm:"primary_key;"`
-	CreatedTime   time.Time `json:"created_time,omitempty" sql:"index;"`
-	CreateUserKey *string   `json:"create_user_key,omitempty" gorm:"type:varchar(50);not null;default:'';" `
+	ID           int64     `json:"id,omitempty"  gorm:"primary_key;AUTO_INCREMENT:false"`
+	CreatedTime  time.Time `json:"created_time,omitempty" sql:"index;"`
+	CreateUserID int64     `json:"create_user_id,omitempty"`
 }
 
 //Viewmodel for view type
 type Viewmodel struct {
-	ID            uint      `json:"id"  gorm:"primary_key;"`
-	Key           string    `json:"key" sql:"type:varchar(50);index" gorm:"unique;not null;"`
-	CreatedTime   time.Time `json:"created_time" sql:"index;"`
-	CreateUserKey *string   `json:"create_user_key" gorm:"type:varchar(50);not null;default:'';" `
-	// CreateUserUsername string     `json:"create_user_username"`
-	// CreateUserRealname string     `json:"create_user_realname"`
-	UpdatedTime   time.Time `json:"updated_time" sql:"index;"`
-	UpdateUserKey *string   `json:"update_user_key" gorm:"type:varchar(50);not null;default:'';" `
-	// UpdateUserUsername string     `json:"update_user_username"`
-	// UpdateUserRealname string     `json:"update_user_realname"`
-	DeletedTime   *time.Time `json:"deleted_time" sql:"index;"`
-	DeleteUserKey *string    `json:"delete_user_key" gorm:"type:varchar(50);not null;default:'';" `
-	// DeleteUserUsername string     `json:"delete_user_username"`
-	// DeleteUserRealname string     `json:"delete_user_realname"`
+	ID           int64      `json:"id"  gorm:"primary_key;AUTO_INCREMENT:false"`
+	CreatedTime  time.Time  `json:"created_time" sql:"index;"`
+	CreateUserID int64      `json:"create_user_id"`
+	UpdatedTime  time.Time  `json:"updated_time" sql:"index;"`
+	UpdateUserID int64      `json:"update_user_id"`
+	DeletedTime  *time.Time `json:"deleted_time" sql:"index;"`
+	DeleteUserID int64      `json:"delete_user_id"`
 }

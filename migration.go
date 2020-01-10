@@ -10,9 +10,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-
-	"github.com/jinzhu/gorm"
-	uuid "github.com/satori/go.uuid"
 )
 
 //Migration model Migration
@@ -22,13 +19,6 @@ type Migration struct {
 	Name   string `json:"name" gorm:"type:varchar(100);"`
 	Status bool   `json:"status" gorm:"default:FALSE"`
 	Error  string `json:"error" `
-}
-
-// BeforeCreate hooks
-func (migration *Migration) BeforeCreate(scope *gorm.Scope) error {
-	//add customize primary key
-	scope.SetColumn("Key", uuid.NewV4().String())
-	return nil
 }
 
 func runMigrationFile(seq int, filepath string) error {

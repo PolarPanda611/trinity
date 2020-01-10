@@ -12,9 +12,14 @@ import (
 
 // GetResourceByid : Retrieve method
 func GetResourceByid(r *RetrieveMixin) {
+	id, err := strconv.ParseInt(r.ViewSetRunTime.Gcontext.Params.ByName("id"), 10, 64)
+	if err != nil {
+		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrLoadDataFailed)
+		return
+	}
 	if err := r.ViewSetRunTime.Db.Scopes(
 		r.ViewSetRunTime.DBFilterBackend,
-		FilterByParam(r.ViewSetRunTime.Gcontext.Params.ByName("key")),
+		FilterByParam(id),
 		FilterByFilter(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.FilterByList, r.ViewSetRunTime.FilterCustomizeFunc),
 		QueryBySelect(r.ViewSetRunTime.Gcontext),
 		QueryByPreload(r.ViewSetRunTime.PreloadList),
@@ -124,11 +129,17 @@ func PatchResource(r *PatchMixin) {
 		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrResolveDataFailed)
 		return
 	}
+	id, err := strconv.ParseInt(r.ViewSetRunTime.Gcontext.Params.ByName("id"), 10, 64)
+	if err != nil {
+		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrUpdateDataFailed)
+		return
+	}
 	if r.ViewSetRunTime.EnableChangeLog {
 		searchOldValue := reflect.New(reflect.ValueOf(r.ViewSetRunTime.ModelSerializer).Elem().Type()).Interface()
+
 		if err := r.ViewSetRunTime.Db.Scopes(
 			r.ViewSetRunTime.DBFilterBackend,
-			FilterByParam(r.ViewSetRunTime.Gcontext.Params.ByName("key")),
+			FilterByParam(id),
 			FilterByFilter(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.FilterByList, r.ViewSetRunTime.FilterCustomizeFunc),
 			FilterBySearch(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.SearchingByList),
 		).Table(r.ViewSetRunTime.ResourceTableName).First(searchOldValue).Error; err != nil {
@@ -147,7 +158,7 @@ func PatchResource(r *PatchMixin) {
 				oldDataMap["d_version"] = model.DVersion
 			}
 		}
-		userKey := r.ViewSetRunTime.Gcontext.GetString("UserKey")
+		userID := r.ViewSetRunTime.Gcontext.GetInt64("UserID")
 		for k, v := range requestbodyMap {
 			oldValue := oldDataMap[k]
 			newValue := fmt.Sprint(reflect.ValueOf(v))
@@ -155,7 +166,7 @@ func PatchResource(r *PatchMixin) {
 				continue
 			}
 			changeLog := AppChangelog{
-				Logmodel:    Logmodel{CreateUserKey: &userKey},
+				Logmodel:    Logmodel{CreateUserID: userID},
 				Resource:    r.ViewSetRunTime.ResourceTableName,
 				Type:        "Update",
 				Column:      k,
@@ -163,7 +174,7 @@ func PatchResource(r *PatchMixin) {
 				NewValue:    newValue,
 				DVersion:    oldDataMap["d_version"],
 				TraceID:     r.ViewSetRunTime.Gcontext.GetString("TraceID"),
-				ResourceKey: r.ViewSetRunTime.Gcontext.Params.ByName("key"),
+				ResourceKey: r.ViewSetRunTime.Gcontext.Params.ByName("id"),
 			}
 			if err := r.ViewSetRunTime.Db.Create(&changeLog).Error; err != nil {
 				r.ViewSetRunTime.HandleResponse(400, nil, err, ErrUpdateDataFailed)
@@ -176,7 +187,7 @@ func PatchResource(r *PatchMixin) {
 	}
 	if err := r.ViewSetRunTime.Db.Scopes(
 		r.ViewSetRunTime.DBFilterBackend,
-		FilterByParam(r.ViewSetRunTime.Gcontext.Params.ByName("key")),
+		FilterByParam(id),
 		FilterByFilter(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.FilterByList, r.ViewSetRunTime.FilterCustomizeFunc),
 		FilterBySearch(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.SearchingByList),
 	).Table(r.ViewSetRunTime.ResourceTableName).Updates(requestbodyMap).First(r.ViewSetRunTime.ModelSerializer).Error; err != nil {
@@ -190,9 +201,14 @@ func PatchResource(r *PatchMixin) {
 
 // DeleteResource : DELETE method
 func DeleteResource(r *DeleteMixin) {
+	id, err := strconv.ParseInt(r.ViewSetRunTime.Gcontext.Params.ByName("id"), 10, 64)
+	if err != nil {
+		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrDeleteDataFailed)
+		return
+	}
 	if err := r.ViewSetRunTime.Db.Scopes(
 		r.ViewSetRunTime.DBFilterBackend,
-		FilterByParam(r.ViewSetRunTime.Gcontext.Params.ByName("key")),
+		FilterByParam(id),
 		FilterByFilter(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.FilterByList, r.ViewSetRunTime.FilterCustomizeFunc),
 		FilterBySearch(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.SearchingByList),
 	).Table(r.ViewSetRunTime.ResourceTableName).Delete(r.ViewSetRunTime.ModelSerializer).Error; err != nil {

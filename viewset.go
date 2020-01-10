@@ -27,8 +27,8 @@ func (t *Trinity) initViewSetCfg() {
 			"DELETE":   JwtUnverifiedAuthBackend,
 		},
 		GetCurrentUserAuth: func(c *gin.Context, db *gorm.DB) error {
-			c.Set("UserKey", "")                // with  c.GetString("UserID")
-			c.Set("UserPermission", []string{}) // with  c.GetString("UserID")
+			c.Set("UserID", "")                 // with  c.GetInt64("UserID")
+			c.Set("UserPermission", []string{}) // with  c.GetStringSlice("UserID")
 			return nil
 		},
 		AccessBackendRequireMap: map[string][]string{},
@@ -201,7 +201,7 @@ func (v *ViewSetRunTime) ViewSetServe() {
 			return
 		}
 	}
-	v.Db = v.Db.Set("UserKey", v.Gcontext.GetString("UserKey"))
+	v.Db = v.Db.Set("UserID", v.Gcontext.GetInt64("UserID"))
 
 	switch v.Method {
 	case "RETRIEVE":

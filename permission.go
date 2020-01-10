@@ -1,22 +1,10 @@
 package trinity
 
-import (
-	"github.com/jinzhu/gorm"
-	uuid "github.com/satori/go.uuid"
-)
-
 //Permission model Role
 type Permission struct {
 	Model
 	Code string `json:"code" gorm:"type:varchar(100);index;unique;not null;"`
-	Name string `json:"name" gorm:"type:varchar(100);"`
-}
-
-// BeforeCreate hooks
-func (p *Permission) BeforeCreate(scope *gorm.Scope) error {
-	//add customize primary key
-	scope.SetColumn("Key", uuid.NewV4().String())
-	return nil
+	Name string `json:"name" gorm:"type:varchar(100);not null;default:''"`
 }
 
 // CreateOrInitPermission create or init permission

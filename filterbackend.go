@@ -7,7 +7,7 @@ import (
 
 //DefaultFilterBackend for Mixin
 func DefaultFilterBackend(c *gin.Context, db *gorm.DB) *gorm.DB {
-	// c.GetString("reqUserKey")
-	// c.GetString("UserPermission")
+	// c.GetString("UserID")
+	// c.GetStringSlice("UserPermission")
 	return db
 }

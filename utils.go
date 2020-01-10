@@ -70,7 +70,7 @@ func FilterPidByParam(param string) func(db *gorm.DB) *gorm.DB {
 //FilterKeyByParam filter key by param
 func FilterKeyByParam(param string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		return db.Where("\"key\" = ?", param)
+		return db.Where("\"id\" = ?", param)
 	}
 }
 
@@ -84,9 +84,9 @@ func HandleFilterBackend(v *ViewSetCfg, method string, c *gin.Context) func(db *
 }
 
 //FilterByParam to filter by param return db
-func FilterByParam(param string) func(db *gorm.DB) *gorm.DB {
+func FilterByParam(param int64) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		return db.Where("\"key\" = ?", param)
+		return db.Where("\"id\" = ?", param)
 	}
 }
 

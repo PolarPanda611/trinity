@@ -3,6 +3,7 @@ package trinity
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -67,9 +68,9 @@ func (t *Trinity) InitDatabase() {
 // updateTimeStampForCreateCallback will set `CreatedOn`, `ModifiedOn` when creating
 func updateTimeStampAndUUIDForCreateCallback(scope *gorm.Scope) {
 	if !scope.HasError() {
-		reqUserKey, ok := scope.Get("UserKey")
+		userID, ok := scope.Get("UserID")
 		if !ok {
-			reqUserKey = nil
+			userID = nil
 		}
 		nowTime := time.Now()
 		if createTimeField, ok := scope.FieldByName("CreatedTime"); ok {
@@ -77,14 +78,14 @@ func updateTimeStampAndUUIDForCreateCallback(scope *gorm.Scope) {
 				createTimeField.Set(nowTime)
 			}
 		}
-		if createUserField, ok := scope.FieldByName("CreateUserKey"); ok {
-			if createUserField.IsBlank {
-				createUserField.Set(reqUserKey)
+		if createUserIDField, ok := scope.FieldByName("CreateUserID"); ok {
+			if createUserIDField.IsBlank {
+				createUserIDField.Set(userID)
 			}
 		}
-		if keyField, ok := scope.FieldByName("Key"); ok {
-			if keyField.IsBlank {
-				keyField.Set(uuid.NewV4().String())
+		if idField, ok := scope.FieldByName("ID"); ok {
+			if idField.IsBlank {
+				idField.Set(GenerateSnowFlakeID(int64(rand.Intn(100))))
 			}
 		}
 		if modifyTimeField, ok := scope.FieldByName("UpdatedTime"); ok {
@@ -92,9 +93,9 @@ func updateTimeStampAndUUIDForCreateCallback(scope *gorm.Scope) {
 				modifyTimeField.Set(nowTime)
 			}
 		}
-		if updateUserField, ok := scope.FieldByName("UpdateUserKey"); ok {
-			if updateUserField.IsBlank {
-				updateUserField.Set(reqUserKey)
+		if updateUserIDField, ok := scope.FieldByName("UpdateUserID"); ok {
+			if updateUserIDField.IsBlank {
+				updateUserIDField.Set(userID)
 			}
 		}
 
@@ -109,23 +110,18 @@ func updateTimeStampAndUUIDForCreateCallback(scope *gorm.Scope) {
 // updateTimeStampForUpdateCallback will set `ModifiedOn` when updating
 func updateTimeStampForUpdateCallback(scope *gorm.Scope) {
 	if !scope.HasError() {
-		reqUserKey, ok := scope.Get("UserKey")
+		userID, ok := scope.Get("UserID")
 		if !ok {
-			reqUserKey = nil
+			userID = nil
 		}
 		var updateAttrs = map[string]interface{}{}
 		if attrs, ok := scope.InstanceGet("gorm:update_attrs"); ok {
 			updateAttrs = attrs.(map[string]interface{})
 			updateAttrs["updated_time"] = time.Now()
-			updateAttrs["update_user_key"] = reqUserKey
+			updateAttrs["update_user_id"] = userID
 			updateAttrs["d_version"] = uuid.NewV4().String()
 			scope.InstanceSet("gorm:update_attrs", updateAttrs)
 		}
-		// if _, ok := scope.Get("gorm:update_column"); !ok {
-		// 	scope.SetColumn("UpdatedTime", time.Now())
-		// 	scope.SetColumn("update_user_key", time.Now())
-		// 	scope.SetColumn("d_version", uuid.NewV4().String())
-		// }
 	}
 
 }
@@ -133,26 +129,26 @@ func updateTimeStampForUpdateCallback(scope *gorm.Scope) {
 // deleteCallback will set `DeletedOn` where deleting
 func deleteCallback(scope *gorm.Scope) {
 	if !scope.HasError() {
-		reqUserKey, ok := scope.Get("UserKey")
+		userID, ok := scope.Get("UserID")
 		if !ok {
-			reqUserKey = nil
+			userID = nil
 		}
 		var extraOption string
 		if str, ok := scope.Get("gorm:delete_option"); ok {
 			extraOption = fmt.Sprint(str)
 		}
 		deletedAtField, hasDeletedAtField := scope.FieldByName("deleted_time")
-		deleteUserKeyField, hasDeleteUserKeyField := scope.FieldByName("DeleteUserKey")
+		deleteUserIDField, hasDeleteUserIDField := scope.FieldByName("DeleteUserID")
 		dVersionField, hasDVersionField := scope.FieldByName("d_version")
 
-		if !scope.Search.Unscoped && hasDeletedAtField && hasDVersionField && hasDeleteUserKeyField {
+		if !scope.Search.Unscoped && hasDeletedAtField && hasDVersionField && hasDeleteUserIDField {
 			scope.Raw(fmt.Sprintf(
 				"UPDATE %v SET %v=%v,%v=%v,%v=%v%v%v",
 				scope.QuotedTableName(),
 				scope.Quote(deletedAtField.DBName),
 				scope.AddToVars(time.Now()),
-				scope.Quote(deleteUserKeyField.DBName),
-				scope.AddToVars(reqUserKey),
+				scope.Quote(deleteUserIDField.DBName),
+				scope.AddToVars(userID),
 				scope.Quote(dVersionField.DBName),
 				scope.AddToVars(uuid.NewV4().String()),
 				addExtraSpaceIfExist(scope.CombinedConditionSql()),
