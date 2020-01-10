@@ -68,7 +68,7 @@ func FilterPidByParam(param string) func(db *gorm.DB) *gorm.DB {
 }
 
 //FilterKeyByParam filter key by param
-func FilterKeyByParam(param string) func(db *gorm.DB) *gorm.DB {
+func FilterKeyByParam(param int64) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		return db.Where("\"id\" = ?", param)
 	}

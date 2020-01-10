@@ -9,13 +9,13 @@ type Model struct {
 	ID           int64      `json:"id"  gorm:"primary_key;AUTO_INCREMENT:false"`
 	CreatedTime  time.Time  `json:"created_time"`
 	CreateUser   *User      `json:"create_user"`
-	CreateUserID int64      `json:"create_user_id"`
+	CreateUserID int64      `json:"create_user_id" gorm:"default:0"`
 	UpdatedTime  time.Time  `json:"updated_time"`
 	UpdateUser   *User      `json:"update_user"`
-	UpdateUserID int64      `json:"update_user_id"`
+	UpdateUserID int64      `json:"update_user_id" gorm:"default:0"`
 	DeletedTime  *time.Time `json:"deleted_time"`
 	DeleteUser   *User      `json:"delete_user"`
-	DeleteUserID int64      `json:"delete_user_id"`
+	DeleteUserID int64      `json:"delete_user_id" gorm:"default:0"`
 	DVersion     string     `json:"d_version"`
 }
 
