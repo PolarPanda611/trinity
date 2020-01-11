@@ -35,7 +35,7 @@ type LogFormat struct {
 	Message        string        `json:"message"`      // error message
 	ErrorDetail    string        `json:"error_detail"` // error detail info
 	BodySize       int           `json:"body_size"`
-	UserID         int64         `json:"user_id"`
+	UserID         int64         `json:"user_id,string"`
 	Username       string        `json:"username"`
 	// db log
 	SQLFunc    string `json:"sqlfunc"`

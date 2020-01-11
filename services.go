@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"reflect"
+
 	"strconv"
 
 	"github.com/jinzhu/gorm"
@@ -134,6 +135,7 @@ func PatchResource(r *PatchMixin) {
 		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrUpdateDataFailed)
 		return
 	}
+	delete(requestbodyMap, "key")
 	if r.ViewSetRunTime.EnableChangeLog {
 		searchOldValue := reflect.New(reflect.ValueOf(r.ViewSetRunTime.ModelSerializer).Elem().Type()).Interface()
 
@@ -185,16 +187,23 @@ func PatchResource(r *PatchMixin) {
 	if r.ViewSetRunTime.EnableVersionControl {
 
 	}
-	if err := r.ViewSetRunTime.Db.Scopes(
+	updateQuery := r.ViewSetRunTime.Db.Scopes(
 		r.ViewSetRunTime.DBFilterBackend,
 		FilterByParam(id),
 		FilterByFilter(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.FilterByList, r.ViewSetRunTime.FilterCustomizeFunc),
 		FilterBySearch(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.SearchingByList),
-	).Table(r.ViewSetRunTime.ResourceTableName).Updates(requestbodyMap).First(r.ViewSetRunTime.ModelSerializer).Error; err != nil {
+		DataVersionFilter(requestbodyMap["d_version"], r.ViewSetRunTime.EnableDataVersion),
+	).Table(r.ViewSetRunTime.ResourceTableName).Updates(requestbodyMap)
+
+	if err := updateQuery.Error; err != nil {
 		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrUpdateDataFailed)
 		return
 	}
-	r.ViewSetRunTime.HandleResponse(200, r.ViewSetRunTime.ModelSerializer, nil, nil)
+	if effectNum := updateQuery.RowsAffected; effectNum != 1 {
+		r.ViewSetRunTime.HandleResponse(400, nil, ErrUpdateZeroAffected, ErrUpdateDataFailed)
+		return
+	}
+	r.ViewSetRunTime.HandleResponse(200, "Updated Successfully", nil, nil)
 	return
 
 }

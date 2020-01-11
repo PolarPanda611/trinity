@@ -74,6 +74,19 @@ func FilterKeyByParam(param int64) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
+//DataVersionFilter filter key by param
+func DataVersionFilter(param interface{}, isCheck bool) func(db *gorm.DB) *gorm.DB {
+	if isCheck {
+		dVersion, _ := param.(string)
+		return func(db *gorm.DB) *gorm.DB {
+			return db.Where("\"d_version\" = ?", dVersion)
+		}
+	}
+	return func(db *gorm.DB) *gorm.DB {
+		return db
+	}
+}
+
 // HandleFilterBackend handle filter backend
 func HandleFilterBackend(v *ViewSetCfg, method string, c *gin.Context) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
