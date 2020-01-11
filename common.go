@@ -6,35 +6,35 @@ import (
 
 //Model common type
 type Model struct {
-	ID           int64      `json:"id"  gorm:"primary_key;AUTO_INCREMENT:false"`
+	ID           int64      `json:"key"  gorm:"primary_key;AUTO_INCREMENT:false"`
 	CreatedTime  time.Time  `json:"created_time"`
 	CreateUser   *User      `json:"create_user"`
-	CreateUserID int64      `json:"create_user_id" gorm:"default:0"`
+	CreateUserID int64      `json:"create_user_id" gorm:"not null;default:0"`
 	UpdatedTime  time.Time  `json:"updated_time"`
 	UpdateUser   *User      `json:"update_user"`
-	UpdateUserID int64      `json:"update_user_id" gorm:"default:0"`
+	UpdateUserID int64      `json:"update_user_id" gorm:"not null;default:0"`
 	DeletedTime  *time.Time `json:"deleted_time"`
 	DeleteUser   *User      `json:"delete_user"`
-	DeleteUserID int64      `json:"delete_user_id" gorm:"default:0"`
+	DeleteUserID int64      `json:"delete_user_id" gorm:"not null;default:0"`
 	DVersion     string     `json:"d_version"`
 }
 
 //Simpmodel common type
 type Simpmodel struct {
-	ID          int64     `json:"id"  gorm:"primary_key;AUTO_INCREMENT:false"`
+	ID          int64     `json:"key"  gorm:"primary_key;AUTO_INCREMENT:false"`
 	CreatedTime time.Time `json:"created_time" `
 }
 
 //Logmodel common type
 type Logmodel struct {
-	ID           int64     `json:"id,omitempty"  gorm:"primary_key;AUTO_INCREMENT:false"`
+	ID           int64     `json:"key,omitempty"  gorm:"primary_key;AUTO_INCREMENT:false"`
 	CreatedTime  time.Time `json:"created_time,omitempty" sql:"index;"`
-	CreateUserID int64     `json:"create_user_id,omitempty"`
+	CreateUserID int64     `json:"create_user_id,omitempty" gorm:"not null;default:0"`
 }
 
 //Viewmodel for view type
 type Viewmodel struct {
-	ID           int64      `json:"id"  gorm:"primary_key;AUTO_INCREMENT:false"`
+	ID           int64      `json:"key"  gorm:"primary_key;AUTO_INCREMENT:false"`
 	CreatedTime  time.Time  `json:"created_time" sql:"index;"`
 	CreateUserID int64      `json:"create_user_id"`
 	UpdatedTime  time.Time  `json:"updated_time" sql:"index;"`

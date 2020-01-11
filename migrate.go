@@ -34,7 +34,7 @@ func (t *Trinity) initUserDefaultValue() {
 		var admingroup []Group
 		t.db.Where("name = ?", "superadmin").Find(&admingroup)
 		var adminuser User
-		adminuser.UserGroup = admingroup
+		adminuser.Groups = admingroup
 		adminuser.Username = v
 		if err := t.db.FirstOrCreate(&adminuser, map[string]interface{}{"username": v}).Error; err != nil {
 			LogPrint("Init Admin user  err :" + err.Error())
