@@ -19,10 +19,10 @@ func (v *ViewSetRunTime) Response() {
 	res.Status = v.Status
 	res.TraceID = v.TraceID
 	if v.RealError != nil {
-		userKey := v.Gcontext.GetString("UserKey")
+		userID := v.Gcontext.GetInt64("UserID")
 		// v.Cfg.Logger.LogWriter(v)
 		e := AppError{
-			Logmodel: Logmodel{CreateUserKey: &userKey},
+			Logmodel: Logmodel{CreateUserID: userID},
 			TraceID:  v.Gcontext.GetString("TraceID"),
 			File:     v.File,
 			Line:     strconv.Itoa(v.Line),

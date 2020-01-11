@@ -43,6 +43,7 @@ type ViewSetRunTime struct {
 	OrderingByList        map[string]bool
 	PageSize              int
 	EnableChangeLog       bool
+	EnableDataVersion     bool
 	EnableVersionControl  bool
 	Retrieve              func(r *ViewSetRunTime)
 	Get                   func(r *ViewSetRunTime)
@@ -116,6 +117,8 @@ type ViewSetCfg struct {
 	PageSize int
 	// EnableChangeLog enable change log
 	EnableChangeLog bool
+	// EnableDataVersion check
+	EnableDataVersion bool
 	// EnableHistory enable history version
 	EnableVersionControl bool
 	// Retrieve: customize retrieve func

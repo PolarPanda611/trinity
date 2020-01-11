@@ -27,8 +27,8 @@ func (t *Trinity) initViewSetCfg() {
 			"DELETE":   JwtUnverifiedAuthBackend,
 		},
 		GetCurrentUserAuth: func(c *gin.Context, db *gorm.DB) error {
-			c.Set("UserKey", "")                // with  c.GetString("UserID")
-			c.Set("UserPermission", []string{}) // with  c.GetString("UserID")
+			c.Set("UserID", "")                 // with  c.GetInt64("UserID")
+			c.Set("UserPermission", []string{}) // with  c.GetStringSlice("UserID")
 			return nil
 		},
 		AccessBackendRequireMap: map[string][]string{},
@@ -58,6 +58,7 @@ func (t *Trinity) initViewSetCfg() {
 		OrderingByList:       map[string]bool{},
 		PageSize:             t.setting.Webapp.PageSize,
 		EnableChangeLog:      false,
+		EnableDataVersion:    true,
 		EnableVersionControl: false,
 	}
 	t.vCfg = v
@@ -81,6 +82,7 @@ func (v *ViewSetCfg) clone() *ViewSetCfg {
 		OrderingByList:           v.OrderingByList,
 		PageSize:                 v.PageSize,
 		EnableChangeLog:          v.EnableChangeLog,
+		EnableDataVersion:        v.EnableDataVersion,
 		EnableVersionControl:     v.EnableVersionControl,
 		Retrieve:                 v.Retrieve,
 		Get:                      v.Get,
@@ -147,6 +149,7 @@ func (v *ViewSetCfg) NewRunTime(c *gin.Context, ResourceModel interface{}, Model
 		PreloadList:           v.PreloadListMap[httpMethod],
 		SearchingByList:       v.SearchingByList,
 		EnableChangeLog:       v.EnableChangeLog,
+		EnableDataVersion:     v.EnableDataVersion,
 		EnableVersionControl:  v.EnableVersionControl,
 		Retrieve:              v.Retrieve,
 		Get:                   v.Get,
@@ -201,7 +204,7 @@ func (v *ViewSetRunTime) ViewSetServe() {
 			return
 		}
 	}
-	v.Db = v.Db.Set("UserKey", v.Gcontext.GetString("UserKey"))
+	v.Db = v.Db.Set("UserID", v.Gcontext.GetInt64("UserID"))
 
 	switch v.Method {
 	case "RETRIEVE":

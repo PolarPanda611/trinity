@@ -77,7 +77,7 @@ func NewAPIInGroup(rg *gin.RouterGroup, resource string, viewset gin.HandlerFunc
 		}
 	}
 	if SupportMethodMap["Retrieve"] {
-		rg.GET("/"+resource+"/:key", viewset)
+		rg.GET("/"+resource+"/:id", viewset)
 	}
 	if SupportMethodMap["List"] {
 		rg.GET("/"+resource, viewset)
@@ -86,10 +86,10 @@ func NewAPIInGroup(rg *gin.RouterGroup, resource string, viewset gin.HandlerFunc
 		rg.POST("/"+resource, viewset)
 	}
 	if SupportMethodMap["Update"] {
-		rg.PATCH("/"+resource+"/:key", viewset)
-		rg.PUT("/"+resource+"/:key", viewset)
+		rg.PATCH("/"+resource+"/:id", viewset)
+		rg.PUT("/"+resource+"/:id", viewset)
 	}
 	if SupportMethodMap["Delete"] {
-		rg.DELETE("/"+resource+"/:key", viewset)
+		rg.DELETE("/"+resource+"/:id", viewset)
 	}
 }

@@ -1,27 +1,15 @@
 package trinity
 
-import (
-	"github.com/jinzhu/gorm"
-	uuid "github.com/satori/go.uuid"
-)
-
 //User model User
 type User struct {
 	Model
-	Username            string       `json:"username" gorm:"type:varchar(50);index;unique;not null;"`                                    // login username /profile
-	NameLocal           string       `json:"name_local"`                                                                                 // local name
-	NameEN              string       `json:"name_en"`                                                                                    // EN name
-	Email               string       `json:"email"`                                                                                      // login email
-	Phone               string       `json:"phone" gorm:"type:varchar(50);" `                                                            // login phone
-	UserGroup           []Group      `json:"user_group" gorm:"many2many:user_group;AssociationForeignkey:Key;ForeignKey:Key;"`           // foreign key -->group
-	UserPermission      []Permission `json:"user_permission" gorm:"many2many:user_permission;AssociationForeignkey:Key;ForeignKey:Key;"` // foreign key --->permission
-	PreferenceLanguages string       `json:"preference_language" gorm:"type:language;default:'en-US'" `                                  // user preference language
+	Username           string       `json:"username" gorm:"type:varchar(50);index;not null;"`             // login username /profile
+	NameLocal          string       `json:"name_local"  gorm:"type:varchar(50);" `                        // local name
+	NameEN             string       `json:"name_en"  gorm:"type:varchar(50);" `                           // EN name
+	Email              string       `json:"email"  gorm:"type:varchar(50);" `                             // login email
+	Phone              string       `json:"phone" gorm:"type:varchar(50);" `                              // login phone
+	Groups             []Group      `json:"groups" gorm:"many2many:user_groups;"`                         // foreign key -->group
+	Permissions        []Permission `json:"permissions" gorm:"many2many:user_permissions;"`               // foreign key --->permission
+	PreferenceLanguage string       `json:"preference_language" gorm:"type:varchar(50);default:'en-US'" ` // user preference language
 
-}
-
-// BeforeCreate hooks
-func (user *User) BeforeCreate(scope *gorm.Scope) error {
-	//add customize primary key
-	scope.SetColumn("Key", uuid.NewV4().String())
-	return nil
 }

@@ -51,7 +51,9 @@ type LogFormatterParams struct {
 	// Keys are the keys set on the request's context.
 	Keys map[string]interface{}
 	// UserID is the request user
-	UserID string
+	UserID int64
+	// Username is the request user
+	Username string
 	// request TraceID unique
 	TraceID string
 
@@ -100,7 +102,8 @@ func LoggerWithConfig(conf LoggerConfig) gin.HandlerFunc {
 		param.ErrorMessage = c.Errors.String()
 
 		param.BodySize = c.Writer.Size()
-		param.UserID = c.GetString("UserID")
+		param.UserID = c.GetInt64("UserID")
+		param.Username = c.GetString("Username")
 		param.TraceID = c.GetString("TraceID")
 		param.Path = raw
 		param.ErrorDetail = c.GetString("ErrorDetail")

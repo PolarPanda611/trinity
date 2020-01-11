@@ -35,7 +35,8 @@ type LogFormat struct {
 	Message        string        `json:"message"`      // error message
 	ErrorDetail    string        `json:"error_detail"` // error detail info
 	BodySize       int           `json:"body_size"`
-	UID            string        `json:"uid"`
+	UserID         int64         `json:"user_id,string"`
+	Username       string        `json:"username"`
 	// db log
 	SQLFunc    string `json:"sqlfunc"`
 	SQL        string `json:"sql"`
@@ -74,7 +75,8 @@ func CustomizeLogFormatter(params LogFormatterParams) string {
 		HTTPPath:       params.Path,
 		HTTPStatusCode: params.StatusCode,
 		BodySize:       params.BodySize,
-		UID:            params.UserID,
+		UserID:         params.UserID,
+		Username:       params.Username,
 		ErrorDetail:    params.ErrorDetail,
 		SQLFunc:        params.SQLFunc,
 		SQL:            params.SQL,
@@ -152,7 +154,8 @@ func DbLoggerFormatter(r *ViewSetRunTime, v ...interface{}) {
 		HTTPPath:       r.Gcontext.Request.URL.RequestURI(),
 		HTTPStatusCode: r.Gcontext.Writer.Status(),
 		BodySize:       r.Gcontext.Writer.Size(),
-		UID:            r.Gcontext.GetString("UserID"),
+		UserID:         r.Gcontext.GetInt64("UserID"),
+		Username:       r.Gcontext.GetString("Username"),
 		ErrorDetail:    r.Gcontext.GetString("ErrorDetail"),
 		SQLFunc:        sqlfunc,
 		SQL:            fmt.Sprintln(gorm.LogFormatter(v...)),

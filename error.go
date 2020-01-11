@@ -42,6 +42,8 @@ var (
 	ErrUnknownService = errors.New("app.error.UnknownService")
 	// ErrDataAssertion  app.error.DataAssetion
 	ErrDataAssertion = errors.New("app.error.DataAssetion")
+	// ErrUpdateZeroAffected  app.error.DataAssetion
+	ErrUpdateZeroAffected = errors.New("app.error.ErrUpdateZeroAffected")
 )
 
 // LoadConfigError load config error log fatal
