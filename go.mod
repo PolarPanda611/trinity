@@ -10,6 +10,7 @@ require (
 	github.com/gin-contrib/cors v1.3.0
 	github.com/gin-gonic/gin v1.5.0
 	github.com/jinzhu/configor v1.1.1
+	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
 	github.com/jinzhu/gorm v1.9.11
 	github.com/lib/pq v1.1.1
 	github.com/satori/go.uuid v1.2.0

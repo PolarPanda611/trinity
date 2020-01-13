@@ -331,4 +331,5 @@ func Response(r *ViewSetRunTime) {
 支持字段级验证请求数据   
 外键字段过滤   
 
+post and patch not support assosiation update and create 
 

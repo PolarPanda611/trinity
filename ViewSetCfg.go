@@ -47,12 +47,21 @@ type ViewSetRunTime struct {
 	EnableVersionControl  bool
 	Retrieve              func(r *ViewSetRunTime)
 	Get                   func(r *ViewSetRunTime)
-	Post                  func(r *ViewSetRunTime)
-	Put                   func(r *ViewSetRunTime)
-	Patch                 func(r *ViewSetRunTime)
-	Delete                func(r *ViewSetRunTime)
-	Cfg                   *ViewSetCfg
-	DBLogger              Logger
+	// PostValidation : validation for post body data
+	PostValidation interface{}
+	// Post: customize Post func
+	Post func(r *ViewSetRunTime)
+	// PutValidation : validation for put body data
+	PutValidation interface{}
+	// Put: customize Put func
+	Put func(r *ViewSetRunTime)
+	// PatchValidation : validation for patch body data
+	PatchValidation interface{}
+	// Patch: customize Patch func
+	Patch    func(r *ViewSetRunTime)
+	Delete   func(r *ViewSetRunTime)
+	Cfg      *ViewSetCfg
+	DBLogger Logger
 
 	//response handle
 	Status    int
@@ -125,10 +134,16 @@ type ViewSetCfg struct {
 	Retrieve func(r *ViewSetRunTime)
 	// Get: customize Get func
 	Get func(r *ViewSetRunTime)
+	// PostValidation : validation for post body data
+	PostValidation interface{}
 	// Post: customize Post func
 	Post func(r *ViewSetRunTime)
+	// PutValidation : validation for put body data
+	PutValidation interface{}
 	// Put: customize Put func
 	Put func(r *ViewSetRunTime)
+	// PatchValidation : validation for patch body data
+	PatchValidation interface{}
 	// Patch: customize Patch func
 	Patch func(r *ViewSetRunTime)
 	// Delete: customize Delete func

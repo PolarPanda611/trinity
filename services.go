@@ -8,6 +8,7 @@ import (
 
 	"strconv"
 
+	"github.com/jinzhu/copier"
 	"github.com/jinzhu/gorm"
 )
 
@@ -109,11 +110,19 @@ func GetResourceList(r *GetMixin) {
 
 // CreateResource : Create method
 func CreateResource(r *PostMixin) {
-	if err := r.ViewSetRunTime.Gcontext.BindJSON(r.ViewSetRunTime.ModelSerializer); err != nil {
-		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrResolveDataFailed)
-		return
+	if r.ViewSetRunTime.PostValidation != nil {
+		if err := r.ViewSetRunTime.Gcontext.BindJSON(r.ViewSetRunTime.PostValidation); err != nil {
+			r.ViewSetRunTime.HandleResponse(400, nil, err, ErrResolveDataFailed)
+			return
+		}
+		copier.Copy(r.ViewSetRunTime.ModelSerializer, r.ViewSetRunTime.PostValidation)
+	} else {
+		if err := r.ViewSetRunTime.Gcontext.BindJSON(r.ViewSetRunTime.ModelSerializer); err != nil {
+			r.ViewSetRunTime.HandleResponse(400, nil, err, ErrResolveDataFailed)
+			return
+		}
 	}
-	if err := r.ViewSetRunTime.Db.Table(r.ViewSetRunTime.ResourceTableName).Create(r.ViewSetRunTime.ModelSerializer).Error; err != nil {
+	if err := r.ViewSetRunTime.Db.Set("gorm:save_associations", false).Table(r.ViewSetRunTime.ResourceTableName).Create(r.ViewSetRunTime.ModelSerializer).Error; err != nil {
 		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrCreateDataFailed)
 		return
 	}
@@ -123,6 +132,7 @@ func CreateResource(r *PostMixin) {
 
 // PatchResource : PATCH method
 func PatchResource(r *PatchMixin) {
+
 	buf := make([]byte, 1024)
 	n, _ := r.ViewSetRunTime.Gcontext.Request.Body.Read(buf)
 	requestbodyMap := make(map[string]interface{})
@@ -187,7 +197,7 @@ func PatchResource(r *PatchMixin) {
 	if r.ViewSetRunTime.EnableVersionControl {
 
 	}
-	updateQuery := r.ViewSetRunTime.Db.Scopes(
+	updateQuery := r.ViewSetRunTime.Db.Set("gorm:save_associations", false).Scopes(
 		r.ViewSetRunTime.DBFilterBackend,
 		FilterByParam(id),
 		FilterByFilter(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.FilterByList, r.ViewSetRunTime.FilterCustomizeFunc),
