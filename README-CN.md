@@ -76,8 +76,8 @@ type ViewSetCfg struct {
 	// e.g : requiredPermission := []string{"123"} get with AccessBackendReqMap by default
 	// e.g : trinity.CheckAccessAuthorization(requiredPermission , userPermission) , true?allow:deny
 	AccessBackendCheckMap map[string]func(v *ViewSetRunTime) error
-	// PreloadListMap gorm preload list
-	PreloadListMap map[string][]string
+    // PreloadListMap gorm preload list
+	PreloadListMap map[string]map[string]func(db *gorm.DB) *gorm.DB 
 	// FilterBackendMap : all the query will with this filter backend
 	FilterBackendMap map[string]func(c *gin.Context, db *gorm.DB) *gorm.DB
 	// FilterByList : only in FilterByList will do the filter
@@ -246,6 +246,36 @@ func CountryViewSet(c *gin.Context) {
 	----OrderingByList  order by condition must configured in in OrderingByList config  
 	OrderingBy=-id,name	=> order by id desc , name    
 ```
+
+
+
+   * 自定义预加载 (自定义预加载)
+```
+	
+// QuotationViewSet hanlde router
+	func QuotationViewSet(c *gin.Context) {
+		v := trinity.NewViewSet()
+		v.HasAuthCtl = true
+		v.PreloadListMap = map[string]map[string]func(db *gorm.DB) *gorm.DB{
+			"RETRIEVE": map[string]func(db *gorm.DB) *gorm.DB{
+				"Details":               nil,
+				// "Details": func(db *gorm.DB) *gorm.DB {
+				// 	return db.Where("id=1 ")
+				// },
+			},
+			"GET": nil,
+		}
+		v.EnableChangeLog = true
+		v.PostValidation = &QuotationPostValidation{}
+		v.NewRunTime(
+			c,
+			&model.Quotation{},
+			&model.Quotation{},
+			&[]model.Quotation{},
+		).ViewSetServe()
+	}
+```
+
 
    * 自定义分页 (自定义分页数量和页码)
 ```
