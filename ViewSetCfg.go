@@ -35,7 +35,7 @@ type ViewSetRunTime struct {
 	AccessBackendRequire  []string
 	AccessBackendCheck    func(v *ViewSetRunTime) error
 	DBFilterBackend       func(db *gorm.DB) *gorm.DB // current dbfilterbackend
-	PreloadList           []string
+	PreloadList           map[string]func(db *gorm.DB) *gorm.DB
 	FilterBackend         func(c *gin.Context, db *gorm.DB) *gorm.DB
 	FilterByList          []string
 	FilterCustomizeFunc   map[string]func(db *gorm.DB, queryValue string) *gorm.DB
@@ -106,7 +106,7 @@ type ViewSetCfg struct {
 	// e.g : trinity.CheckAccessAuthorization(requiredPermission , userPermission) , true?allow:deny
 	AccessBackendCheckMap map[string]func(v *ViewSetRunTime) error
 	// PreloadListMap gorm preload list
-	PreloadListMap map[string][]string
+	PreloadListMap map[string]map[string]func(db *gorm.DB) *gorm.DB
 	// FilterBackendMap : all the query will with this filter backend
 	FilterBackendMap map[string]func(c *gin.Context, db *gorm.DB) *gorm.DB
 	// FilterByList : only in FilterByList will do the filter

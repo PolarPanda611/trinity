@@ -239,12 +239,12 @@ func QueryByPagination(c *gin.Context, PageSize int) func(db *gorm.DB) *gorm.DB 
 }
 
 //QueryByPreload handling preload
-func QueryByPreload(PreloadList []string) func(db *gorm.DB) *gorm.DB {
+func QueryByPreload(PreloadList map[string]func(db *gorm.DB) *gorm.DB) func(db *gorm.DB) *gorm.DB {
 
 	return func(db *gorm.DB) *gorm.DB {
 		if len(PreloadList) > 0 {
-			for _, v := range PreloadList {
-				db = db.Preload(v)
+			for k, v := range PreloadList {
+				db = db.Preload(k, v)
 			}
 		}
 		return db

@@ -40,9 +40,9 @@ func (t *Trinity) initViewSetCfg() {
 			"PUT":      DefaultAccessBackend,
 			"DELETE":   DefaultAccessBackend,
 		},
-		PreloadListMap: map[string][]string{
-			"RETRIEVE": []string{}, // Foreign key :Foreign table  if you want to filter the foreign table
-			"GET":      []string{},
+		PreloadListMap: map[string]map[string]func(db *gorm.DB) *gorm.DB{
+			"RETRIEVE": nil, // Foreign key :Foreign table  if you want to filter the foreign table
+			"GET":      nil,
 		},
 		FilterBackendMap: map[string]func(c *gin.Context, db *gorm.DB) *gorm.DB{
 			"RETRIEVE": DefaultFilterBackend,
