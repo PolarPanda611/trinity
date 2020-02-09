@@ -87,11 +87,33 @@ func DataVersionFilter(param interface{}, isCheck bool) func(db *gorm.DB) *gorm.
 	}
 }
 
+//FilterByCustomizeCondition filter by customize condition
+func FilterByCustomizeCondition(ok bool, k string, v interface{}) func(db *gorm.DB) *gorm.DB {
+	if ok {
+		return func(db *gorm.DB) *gorm.DB {
+			return db.Where(k, v)
+		}
+	}
+	return func(db *gorm.DB) *gorm.DB {
+		return db
+	}
+
+}
+
 // HandleFilterBackend handle filter backend
 func HandleFilterBackend(v *ViewSetCfg, method string, c *gin.Context) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		// You can use reqUserID here to check user authorization
 		return v.FilterBackendMap[method](c, db)
+	}
+
+}
+
+// HandleBackend handle filter backend
+func HandleBackend(c *gin.Context, backend func(c *gin.Context, db *gorm.DB) *gorm.DB) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		// You can use reqUserID here to check user authorization
+		return backend(c, db)
 	}
 
 }
@@ -116,6 +138,7 @@ func FilterByFilter(c *gin.Context, FilterByList []string, FilterCustomizeFunc m
 				db = FilterCustomizeFunc[queryName](db, queryValue)
 				continue
 			}
+
 			if len(strings.Split(queryName, "__")) > 1 {
 				switch strings.Split(queryName, "__")[1] {
 				case "like":
@@ -164,6 +187,13 @@ func FilterByFilter(c *gin.Context, FilterByList []string, FilterCustomizeFunc m
 						db = db.Or("\""+v+"\" = ? ", queryValue)
 
 					}
+					break
+				default:
+					queryTableName := strings.Split(queryName, "__")[0]
+					foreignTableAssosiationID := queryTableName + "_id"
+					foreignTableNameWithPrefix := GlobalTrinity.setting.Database.TablePrefix + queryTableName
+					queryColumnName := strings.Split(queryName, "__")[1]
+					db.Where("\""+foreignTableAssosiationID+"\" in ( select \"id\" from  \""+foreignTableNameWithPrefix+"\" where \""+queryColumnName+"\" = ? ", strings.Split(queryName, "__")[3])
 					break
 				}
 			} else {

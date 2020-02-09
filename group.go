@@ -7,6 +7,6 @@ type Group struct {
 	Description string       `json:"description" gorm:"type:varchar(100);not null;default:''"`
 	Permissions []Permission `json:"permissions" gorm:"many2many:group_permissions;"`
 	PGroup      *Group       `json:"p_group"`
-	PID         int64        `json:"pid,string"`
+	PID         int64        `json:"p_id,string"`
 	Roles       []Role       `json:"roles" gorm:"many2many:group_roles;"`
 }

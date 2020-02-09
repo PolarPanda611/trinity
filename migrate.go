@@ -1,8 +1,13 @@
 package trinity
 
+import "fmt"
+
 // ToMigrateDB migrate db function
 func (t *Trinity) ToMigrateDB(m interface{}) {
-	t.db.AutoMigrate(m)
+	err := t.db.AutoMigrate(m).Error
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 // ToCreatePermission create permission func
