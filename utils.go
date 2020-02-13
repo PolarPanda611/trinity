@@ -230,6 +230,9 @@ func QueryByOrdering(c *gin.Context, OrderingByList map[string]bool) func(db *go
 		//Searching Section : keywords : OrderingBy , separate by comma
 		//example : OrderingBy=-id,user,-name , - means desc , default asc
 		OrderByField := c.Query("OrderingBy")
+		if OrderByField == "" {
+			return db.Order("id desc")
+		}
 		ordercondition := ""
 		for _, orderField := range strings.Split(OrderByField, ",") {
 			if len(strings.Split(orderField, "-")) > 1 {
@@ -249,7 +252,7 @@ func QueryByOrdering(c *gin.Context, OrderingByList map[string]bool) func(db *go
 //QueryByPagination handling pagination
 func QueryByPagination(c *gin.Context, PageSize int) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		PageNumField := c.DefaultQuery("PageNum", "0")
+		PageNumField := c.DefaultQuery("PageNum", "1")
 		PageSizeField := c.DefaultQuery("PageSize", string(PageSize))
 		var err error
 		var PageNumFieldInt int
