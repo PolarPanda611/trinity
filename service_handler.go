@@ -81,3 +81,13 @@ func (r *UnknownMixin) Handler() {
 type ReqMixinHandler interface {
 	Handler()
 }
+
+// HandleServices for multi response
+func HandleServices(m ReqMixinHandler, v *ViewSetRunTime, cHandler ...func(r *ViewSetRunTime)) {
+	if len(cHandler) == 1 && cHandler[0] != nil {
+		cHandler[0](v)
+		return
+	}
+	m.Handler()
+	return
+}

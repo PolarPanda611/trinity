@@ -1,6 +1,7 @@
 package trinity
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -229,12 +230,12 @@ func (t *Trinity) Serve() error {
 		IdleTimeout:       time.Duration(t.setting.Webapp.IdleTimeoutSecond) * time.Second,
 		MaxHeaderBytes:    t.setting.Webapp.MaxHeaderBytes,
 	}
-	t.logger.Print("[info]  " + time.Now().Format(time.RFC3339) + "  start http server listening : " + t.setting.Webapp.Port + ", version : " + t.setting.Version)
+	t.logger.Print(fmt.Sprintf("[info] %v  start http server listening : %v, version : %v", GetCurrentTimeString(time.RFC3339), t.setting.Webapp.Port, t.setting.Version))
 	return s.ListenAndServe()
 }
 
 // Close http
 func (t *Trinity) Close() {
 	t.db.Close()
-	t.logger.Print("[info]  " + time.Now().Format(time.RFC3339) + "  end http server listening : " + t.setting.Webapp.Port + ", version : " + t.setting.Version)
+	t.logger.Print(fmt.Sprintf("[info] %v  end http server listening : %v, version : %v", GetCurrentTimeString(time.RFC3339), t.setting.Webapp.Port, t.setting.Version))
 }

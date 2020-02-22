@@ -14,6 +14,7 @@ require (
 	github.com/jinzhu/gorm v1.9.11
 	github.com/lib/pq v1.1.1
 	github.com/satori/go.uuid v1.2.0
+	github.com/stretchr/testify v1.4.0
 	github.com/swaggo/gin-swagger v1.2.0
 	gopkg.in/yaml.v2 v2.2.2
 )

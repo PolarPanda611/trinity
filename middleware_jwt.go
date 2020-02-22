@@ -25,7 +25,7 @@ type FedidClaims struct {
 // GenerateToken generate tokens used for auth
 func GenerateToken(userkey string) (string, error, error) {
 	//set expire time
-	expireTime := time.Now().Add(time.Duration(GlobalTrinity.setting.Security.Authentication.JwtExpireHour) * time.Hour)
+	expireTime := GetCurrentTime().Add(time.Duration(GlobalTrinity.setting.Security.Authentication.JwtExpireHour) * time.Hour)
 
 	claims := Claims{
 		userkey,
@@ -98,7 +98,7 @@ func ParseUnverifiedToken(token string) (*FedidClaims, error) {
 		return nil, err
 	}
 	if GlobalTrinity.setting.Security.Authentication.JwtVerifyExpireHour {
-		if !claim.StandardClaims.VerifyExpiresAt(time.Now().Unix(), true) {
+		if !claim.StandardClaims.VerifyExpiresAt(GetCurrentTimeUnix(), true) {
 			return nil, ErrTokenExpired
 		}
 	}
@@ -141,4 +141,18 @@ func JwtUnverifiedAuthBackend(c *gin.Context) error {
 	c.Set("Username", tokenClaims.UID)
 	return nil
 
+}
+
+// JWT is jwt middleware
+func JWT() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		_, rErr, _ := CheckTokenValid(c)
+
+		if rErr != nil {
+			c.AbortWithError(401, rErr)
+			return
+		}
+
+		c.Next()
+	}
 }

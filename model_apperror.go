@@ -1,9 +1,5 @@
 package trinity
 
-import (
-	"github.com/gin-gonic/gin"
-)
-
 //AppError model Error
 type AppError struct {
 	Logmodel
@@ -17,17 +13,4 @@ type AppError struct {
 // RecordError to record error
 func (e *AppError) RecordError() {
 	GlobalTrinity.db.Create(e)
-}
-
-//AppErrorViewSet for app error http handle
-func AppErrorViewSet(c *gin.Context) {
-	v := NewViewSet()
-	v.HasAuthCtl = true
-	v.FilterByList = []string{"trace_id"}
-	v.NewRunTime(
-		c,
-		&AppError{},
-		&AppError{},
-		&[]AppError{},
-	).ViewSetServe()
 }

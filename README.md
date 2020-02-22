@@ -197,39 +197,46 @@ func CountryViewSet(c *gin.Context) {
 	).ViewSetServe())
 }
 ```
-* 支持关键字
+* 支持快速生成过滤
 
 
    * 过滤 (系统预置关键字)
+    -关键字列表[]string{"like", "ilike", "in", "notin", "start", "end", "lt", "lte", "gt", "gte", "isnull", "isempty"}
+	-支持关联关系过滤，以双下划线"__"分隔
 ```
-	
-	//Example :http://127.0.0.1/countries?xxx__like=ooo&xxx__ilike=ooo&xxx__start=date1
-	----FilterByList   filter condition must configured in FilterByList config  
-	// v.FilterByList=[]string{"xxx__like","xxx__ilike"}
+	// Example :table user(id , name , dpp_id) table dpp {id , code , country_id}, table country {id , name ,create_time}
+	// GET : http://127.0.0.1/countries?name__ilike=PolarPanda611&dpp__country_name__ilike=China&dpp__country__create_time__start=2019-01-01
+	// ----FilterByList   filter condition must configured in FilterByList config  
+	// SETTING : v.FilterByList=[]string{"name__ilike","dpp__country_name__ilike","dpp__country__create_time__start"}
+	// EXECUTE:
+	// name__ilike ==> name ilike '%PolarPanda611%'  
+	// dpp__country__name__ilike => dpp_id in (select id from dpp where country_id in (select id from country where name ilike '%China%' ))
+	// dpp__country__create_time__start => dpp_id in (select id from dpp where country_id in (select id from country where create_time > '2019-01-01 00:00:00' ))
+
 	xxx__like=ooo 		=> xxx like '%ooo%'  
 	xxx__ilike=ooo 		=> xxx like '%ooo%'  caps no sensitive
-	xxx__in=aaa,bbb,ccc 	=> xxx in ['aaa','bbb','ccc']  
-	xxx__start=date1	=> xxx > date1  
-	xxx__end=date2		=> xxx < date2
+	xxx__in=aaa,bbb,ccc => xxx in ['aaa','bbb','ccc']  
+	xxx__start=date1	=> xxx > 'date1 00:00:00'  
+	xxx__end=date2		=> xxx < 'date2 23:59:59'  
 	xxx__isnull=true 	=> xxx is null 
 	xxx__isnull=false 	=> xxx is not null 
-	xxx__isempty=true	=>(COALESCE("xxx"::varchar ,'') ='' )  
-	xxx__isempty=false	=>(COALESCE("xxx"::varchar ,'') !='' )  
-	xxxhasoraaa=fff		=> (xxx = fff or aaa = fff)
-	xxx=ooo			=>xxx = ooo
+	xxx__isempty=true	=> (COALESCE("xxx"::varchar ,'') ='' )  
+	xxx__isempty=false	=> (COALESCE("xxx"::varchar ,'') !='' )  
+	xxx=ooo				=> xxx = ooo
 ```
 
    * 自定义过滤 (自定义关键字和查询方法)
 ```
-	#Example  :http://127.0.0.1/countries?filterpolarpanda=me
+	#Example  :http://127.0.0.1/countries?CustomizeFilterUser=PolarPanda611
 	----FilterByList   filter condition must configured in FilterByList config  
-	// v.FilterByList=[]string{"filterpolarpanda"}
+	// v.FilterByList=[]string{"CustomizeFilterUser"}
 	// v.FilterCustomizeFunc=map[string]func(db *gorm.DB, queryValue string) *gorm.DB{
-		"filterpolarpanda":func(db *gorm.DB, queryValue string) *gorm.DB{
-			db.Where("polarpanda = ?" , "me")
-		}
-	}
-	filterpolarpanda=me 		=> polarpanda = 'me'  
+	//		"CustomizeFilterUser":func(db *gorm.DB, queryValue string) *gorm.DB{
+	//			db.Where("name = ?" , "PolarPanda611")
+	//		}
+	// }
+
+	CustomizeFilterUser=PolarPanda611	=> name = 'PolarPanda611'  
 	
 ```
 
@@ -238,7 +245,7 @@ func CountryViewSet(c *gin.Context) {
 	#Example  :http://127.0.0.1/countries?SearchBy=xxx
 	----SearchingByList   search condition must configured in in SearchingByList config  
 	//v.SearchingByList=[]string{"name","address"}
-	Searchby=xxx		=>(name ilike '%xxx%' or address ilike '%xxx%')  
+	SearchBy=xxx		=>(name ilike '%xxx%' or address ilike '%xxx%')  
 ```
 
    * 自定义排序 (自定义排序关键字)
@@ -319,14 +326,11 @@ func Response(r *ViewSetRunTime) {
 }
 ```
    * 支持请求事务
+   整个request将会被同一个事物包裹，
+    -如果返回err，则会request整体roll back
+	-如果不返回err，则会request整体commit
 ```
 	local:
-		project: xx 
-		version: xxx
-		runtime:
-			debug: True
-		security:
-			...
 		webapp:
 			...
 			atomicrequest: true

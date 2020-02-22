@@ -8,3 +8,11 @@ func DefaultAccessBackend(v *ViewSetRunTime) error {
 	return CheckAccessAuthorization(accessBackendRequire, userPermission)
 	// return nil, nil
 }
+
+// CheckAccessAuthorization to check access authorization
+func CheckAccessAuthorization(requiredPermission, userPermission []string) error {
+	if SliceInSlice(requiredPermission, userPermission) {
+		return nil
+	}
+	return ErrAccessAuthCheckFailed
+}

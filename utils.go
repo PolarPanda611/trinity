@@ -1,17 +1,35 @@
 package trinity
 
 import (
-	"encoding/json"
 	"os"
-	"path/filepath"
 	"reflect"
+	"regexp"
 	"runtime"
-	"strconv"
 	"strings"
+	"time"
 
+	"github.com/bwmarrin/snowflake"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 )
+
+// RFC3339FullDate for rfc full date
+const RFC3339FullDate = "2006-01-02"
+
+// GetCurrentTime get current time
+func GetCurrentTime() time.Time {
+	return time.Now()
+}
+
+// GetCurrentTimeString get current time with string
+func GetCurrentTimeString(timeType string) string {
+	return GetCurrentTime().Format(timeType)
+}
+
+// GetCurrentTimeUnix get current time with unix time
+func GetCurrentTimeUnix() int64 {
+	return GetCurrentTime().Unix()
+}
 
 // CheckFileIsExist : check file if exist ,exist -> true , not exist -> false  ,
 /**
@@ -26,12 +44,6 @@ func CheckFileIsExist(filename string) bool {
 	return exist
 }
 
-// GetLogFilePath Initial Log File
-func GetLogFilePath(rootpath string, fileName string) string {
-	return filepath.Join(rootpath, fileName)
-
-}
-
 // GetRequestType to get http request type with restful style
 func GetRequestType(c *gin.Context) string {
 	if c.Request.Method == "GET" {
@@ -42,284 +54,12 @@ func GetRequestType(c *gin.Context) string {
 	return c.Request.Method
 }
 
-// CheckAccessAuthorization to check access authorization
-func CheckAccessAuthorization(requiredPermission, userPermission []string) error {
-	if SliceInSlice(requiredPermission, userPermission) {
-		return nil
-	}
-	return ErrAccessAuthCheckFailed
-}
-
-// HandleServices for multi response
-func HandleServices(m ReqMixinHandler, v *ViewSetRunTime, cHandler ...func(r *ViewSetRunTime)) {
-	if len(cHandler) == 1 && cHandler[0] != nil {
-		cHandler[0](v)
-		return
-	}
-	m.Handler()
-	return
-}
-
-//FilterPidByParam filter pid by param
-func FilterPidByParam(param string) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		return db.Where("\"pid\" = ?", param)
-	}
-}
-
-//FilterKeyByParam filter key by param
-func FilterKeyByParam(param int64) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		return db.Where("\"id\" = ?", param)
-	}
-}
-
-//DataVersionFilter filter key by param
-func DataVersionFilter(param interface{}, isCheck bool) func(db *gorm.DB) *gorm.DB {
-	if isCheck {
-		dVersion, _ := param.(string)
-		return func(db *gorm.DB) *gorm.DB {
-			return db.Where("\"d_version\" = ?", dVersion)
-		}
-	}
-	return func(db *gorm.DB) *gorm.DB {
-		return db
-	}
-}
-
-//FilterByCustomizeCondition filter by customize condition
-func FilterByCustomizeCondition(ok bool, k string, v interface{}) func(db *gorm.DB) *gorm.DB {
-	if ok {
-		return func(db *gorm.DB) *gorm.DB {
-			return db.Where(k, v)
-		}
-	}
-	return func(db *gorm.DB) *gorm.DB {
-		return db
-	}
-
-}
-
-// HandleFilterBackend handle filter backend
-func HandleFilterBackend(v *ViewSetCfg, method string, c *gin.Context) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		// You can use reqUserID here to check user authorization
-		return v.FilterBackendMap[method](c, db)
-	}
-
-}
-
 // HandleBackend handle filter backend
 func HandleBackend(c *gin.Context, backend func(c *gin.Context, db *gorm.DB) *gorm.DB) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		// You can use reqUserID here to check user authorization
 		return backend(c, db)
 	}
-
-}
-
-//FilterByParam to filter by param return db
-func FilterByParam(param int64) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		return db.Where("\"id\" = ?", param)
-	}
-}
-
-//FilterByFilter handle filter
-func FilterByFilter(c *gin.Context, FilterByList []string, FilterCustomizeFunc map[string]func(db *gorm.DB, queryValue string) *gorm.DB) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		// Filter condition
-		for _, queryName := range FilterByList {
-			queryValue := c.Query(queryName)
-			if len(queryValue) == 0 {
-				continue
-			}
-			if _, ok := FilterCustomizeFunc[queryName]; ok {
-				db = FilterCustomizeFunc[queryName](db, queryValue)
-				continue
-			}
-
-			if len(strings.Split(queryName, "__")) > 1 {
-				switch strings.Split(queryName, "__")[1] {
-				case "like":
-					db = db.Where("\""+strings.Split(queryName, "__")[0]+"\" like ? ", "%"+queryValue+"%")
-					break
-				case "ilike":
-					db = db.Where("\""+strings.Split(queryName, "__")[0]+"\" ilike ? ", "%"+queryValue+"%")
-					break
-				case "in":
-					strings.Split(queryValue, ",")
-					db = db.Where("\""+strings.Split(queryName, "__")[0]+"\" in  (?)", strings.Split(queryValue, ","))
-					break
-				case "start":
-					db = db.Where("\""+strings.Split(queryName, "__")[0]+"\" > ? ", queryValue+" 00:00:00")
-					break
-				case "end":
-					db = db.Where("\""+strings.Split(queryName, "__")[0]+"\" < ? ", queryValue+" 23:59:59")
-					break
-				case "isnull":
-					if queryValue == "true" {
-						db = db.Where("( \"" + strings.Split(queryName, "__")[0] + "\" is null )  ")
-					}
-					if queryValue == "false" {
-						db = db.Where("( \"" + strings.Split(queryName, "__")[0] + "\" is not null) ")
-					}
-					break
-				case "isempty":
-					if queryValue == "true" {
-						db = db.Where("(COALESCE(\"" + strings.Split(queryName, "__")[0] + "\"::varchar ,'') ='' )  ")
-					}
-					if queryValue == "false" {
-						db = db.Where("(COALESCE(\"" + strings.Split(queryName, "__")[0] + "\"::varchar ,'') !='') ")
-					}
-					break
-				case "hasor":
-					queryornamelist := strings.Split(strings.Split(queryName, "__")[0], "hasor")
-					for i, v := range queryornamelist {
-						if i == 0 {
-							db = db.Where("( \""+v+"\" = ? ", queryValue)
-							continue
-						}
-						if i == len(queryornamelist)-1 {
-							db = db.Or("\""+v+"\" = ? )", queryValue)
-							continue
-						}
-						db = db.Or("\""+v+"\" = ? ", queryValue)
-
-					}
-					break
-				default:
-					queryTableName := strings.Split(queryName, "__")[0]
-					foreignTableAssosiationID := queryTableName + "_id"
-					foreignTableNameWithPrefix := GlobalTrinity.setting.Database.TablePrefix + queryTableName
-					queryColumnName := strings.Split(queryName, "__")[1]
-					db.Where("\""+foreignTableAssosiationID+"\" in ( select \"id\" from  \""+foreignTableNameWithPrefix+"\" where \""+queryColumnName+"\" = ? ", strings.Split(queryName, "__")[3])
-					break
-				}
-			} else {
-				db = db.Where(queryName+" = ? ", queryValue)
-			}
-		}
-
-		return db
-	}
-}
-
-//FilterBySearch handle search
-func FilterBySearch(c *gin.Context, SearchingByList []string) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		//Searching Section : keywords : Searchby
-		SearchValue := c.Query("Searchby")
-		if len(SearchValue) != 0 {
-			for i, searchField := range SearchingByList {
-				if i == 0 {
-					db = db.Where("\""+searchField+"\""+" ilike ? ", "%"+SearchValue+"%")
-					continue
-				}
-				db = db.Or("\""+searchField+"\""+" ilike ? ", "%"+SearchValue+"%")
-
-			}
-		}
-		return db
-	}
-}
-
-//QueryByOrdering handle ordering
-func QueryByOrdering(c *gin.Context, OrderingByList map[string]bool) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		//Searching Section : keywords : OrderingBy , separate by comma
-		//example : OrderingBy=-id,user,-name , - means desc , default asc
-		OrderByField := c.Query("OrderingBy")
-		if OrderByField == "" {
-			return db.Order("id desc")
-		}
-		ordercondition := ""
-		for _, orderField := range strings.Split(OrderByField, ",") {
-			if len(strings.Split(orderField, "-")) > 1 {
-				if _, ok := OrderingByList[strings.Split(orderField, "-")[1]]; ok {
-					ordercondition += strings.Split(orderField, "-")[1] + " desc ,"
-				}
-			} else {
-				if _, ok := OrderingByList[orderField]; ok {
-					ordercondition += orderField + " asc ,"
-				}
-			}
-		}
-		return db.Order(strings.TrimSuffix(ordercondition, ","))
-	}
-}
-
-//QueryByPagination handling pagination
-func QueryByPagination(c *gin.Context, PageSize int) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		PageNumField := c.DefaultQuery("PageNum", "1")
-		PageSizeField := c.DefaultQuery("PageSize", string(PageSize))
-		var err error
-		var PageNumFieldInt int
-		var PageSizeFieldInt int
-		if PageNumFieldInt, err = strconv.Atoi(PageNumField); err != nil || PageNumFieldInt < 0 {
-			PageNumFieldInt = 0
-		}
-		PageNumFieldInt = PageNumFieldInt - 1
-		if PageSizeFieldInt, err = strconv.Atoi(PageSizeField); err != nil {
-			PageSizeFieldInt = PageSize
-		}
-		offset := PageNumFieldInt * PageSizeFieldInt
-		limit := PageSizeFieldInt
-		return db.Offset(offset).Limit(limit)
-
-	}
-}
-
-//QueryByPreload handling preload
-func QueryByPreload(PreloadList map[string]func(db *gorm.DB) *gorm.DB) func(db *gorm.DB) *gorm.DB {
-
-	return func(db *gorm.DB) *gorm.DB {
-		if len(PreloadList) > 0 {
-			for k, v := range PreloadList {
-				if v == nil {
-					db = db.Preload(k)
-				} else {
-					db = db.Preload(k, v)
-				}
-
-			}
-		}
-		return db
-	}
-}
-
-//QueryBySelect handling select
-func QueryBySelect(c *gin.Context) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		SelectByField := c.Query("SelectBy")
-		if SelectByField == "" {
-			return db
-		}
-		strings.Split(SelectByField, ",")
-		return db.Select(strings.Split(SelectByField, ","))
-
-	}
-}
-
-//HandlestructBySelect handling select
-func HandlestructBySelect(c *gin.Context, resource interface{}) (int, interface{}, error) {
-	SelectByField := c.Query("SelectBy")
-	if SelectByField == "" {
-		return 200, resource, nil
-	}
-	m, _ := json.Marshal(&resource)
-	// decode it back to get a map
-	var a interface{}
-	json.Unmarshal(m, &a)
-	b := a.(map[string]interface{})
-	for k := range b {
-		if !stringInSlice(k, strings.Split(SelectByField, ",")) {
-			delete(b, k)
-		}
-	}
-	json.Marshal(b)
-	return 200, b, nil
 
 }
 
@@ -362,6 +102,36 @@ func SliceInSlice(sliceToCheck []string, slice []string) bool {
 	return true
 }
 
+//RecordErrorLevelTwo login error and print line , func , and error to gin context
+func RecordErrorLevelTwo() (uintptr, string, int) {
+	funcName, file, line, _ := runtime.Caller(2)
+	return funcName, file, line
+}
+
+// Getparentdirectory : get parent directory of the path ,
+/*
+ * @param path string  ,the path you want to get parent directory
+ * @return string  , the parent directory you need
+ */
+func Getparentdirectory(path string, level int) string {
+	return strings.Join(strings.Split(path, "/")[0:len(strings.Split(path, "/"))-level], "/")
+}
+
+//DeleteExtraSpace remove extra space
+func DeleteExtraSpace(s string) string {
+	s1 := strings.Replace(s, "	", " ", -1)      //替换tab为空格
+	regstr := "\\s{2,}"                         //两个及两个以上空格的正则表达式
+	reg, _ := regexp.Compile(regstr)            //编译正则表达式
+	s2 := make([]byte, len(s1))                 //定义字符数组切片
+	copy(s2, s1)                                //将字符串复制到切片
+	spcIndex := reg.FindStringIndex(string(s2)) //在字符串中搜索
+	for len(spcIndex) > 0 {                     //找到适配项
+		s2 = append(s2[:spcIndex[0]+1], s2[spcIndex[1]:]...) //删除多余空格
+		spcIndex = reg.FindStringIndex(string(s2))           //继续在字符串中搜索
+	}
+	return string(s2)
+}
+
 // GetTypeName to get struct type name
 func GetTypeName(myvar interface{}, isToLowerCase bool) string {
 	name := ""
@@ -378,17 +148,14 @@ func GetTypeName(myvar interface{}, isToLowerCase bool) string {
 
 }
 
-//RecordErrorLevelTwo login error and print line , func , and error to gin context
-func RecordErrorLevelTwo() (uintptr, string, int) {
-	funcName, file, line, _ := runtime.Caller(2)
-	return funcName, file, line
-}
+// GenerateSnowFlakeID generate snowflake id
+func GenerateSnowFlakeID(nodenumber int64) int64 {
 
-// Getparentdirectory : get parent directory of the path ,
-/*
- * @param path string  ,the path you want to get parent directory
- * @return string  , the parent directory you need
- */
-func Getparentdirectory(path string, level int) string {
-	return strings.Join(strings.Split(path, "/")[0:len(strings.Split(path, "/"))-level], "/")
+	// Create a new Node with a Node number of 1
+	node, _ := snowflake.NewNode(nodenumber)
+
+	// Generate a snowflake ID.
+	id := node.Generate().Int64()
+	return id
+
 }

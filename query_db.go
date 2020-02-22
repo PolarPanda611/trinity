@@ -5,7 +5,6 @@ import (
 	"log"
 	"math/rand"
 	"strings"
-	"time"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq" //pg
@@ -70,7 +69,7 @@ func updateTimeStampAndUUIDForCreateCallback(scope *gorm.Scope) {
 	if !scope.HasError() {
 		userIDInterface, _ := scope.Get("UserID")
 		userID, _ := userIDInterface.(int64)
-		nowTime := time.Now()
+		nowTime := GetCurrentTime()
 		if createTimeField, ok := scope.FieldByName("CreatedTime"); ok {
 			if createTimeField.IsBlank {
 				createTimeField.Set(nowTime)
@@ -110,7 +109,7 @@ func updateTimeStampForUpdateCallback(scope *gorm.Scope) {
 		var updateAttrs = map[string]interface{}{}
 		if attrs, ok := scope.InstanceGet("gorm:update_attrs"); ok {
 			updateAttrs = attrs.(map[string]interface{})
-			updateAttrs["updated_time"] = time.Now()
+			updateAttrs["updated_time"] = GetCurrentTime()
 			updateAttrs["update_user_id"] = userID
 			updateAttrs["d_version"] = uuid.NewV4().String()
 			scope.InstanceSet("gorm:update_attrs", updateAttrs)
@@ -139,7 +138,7 @@ func deleteCallback(scope *gorm.Scope) {
 				"UPDATE %v SET %v=%v,%v=%v,%v=%v%v%v",
 				scope.QuotedTableName(),
 				scope.Quote(deletedAtField.DBName),
-				scope.AddToVars(time.Now()),
+				scope.AddToVars(GetCurrentTime()),
 				scope.Quote(deleteUserIDField.DBName),
 				scope.AddToVars(userID),
 				scope.Quote(dVersionField.DBName),
