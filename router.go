@@ -13,7 +13,8 @@ import (
 func (t *Trinity) initRouter() {
 	// Creates a router without any middleware by default
 	r := gin.New()
-	r.Use(LoggerWithFormatter())
+	// r.Use(timeoutMiddleware(time.Second * 2))
+	r.Use(LogMiddleware())
 	if t.setting.Security.Cors.Enable {
 		r.Use(cors.New(cors.Config{
 			AllowOrigins:     t.setting.Security.Cors.AllowOrigins,

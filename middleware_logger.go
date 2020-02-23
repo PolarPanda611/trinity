@@ -7,8 +7,8 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-// LoggerWithFormatter  gin log formatter
-func LoggerWithFormatter() gin.HandlerFunc {
+// LogMiddleware  gin log formatter
+func LogMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Start timer
 		start := GetCurrentTime()

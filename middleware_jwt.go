@@ -143,8 +143,8 @@ func JwtUnverifiedAuthBackend(c *gin.Context) error {
 
 }
 
-// JWT is jwt middleware
-func JWT() gin.HandlerFunc {
+// JWTMiddleWare is jwt middleware
+func JWTMiddleWare() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		_, rErr, _ := CheckTokenValid(c)
 
