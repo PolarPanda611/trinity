@@ -29,7 +29,6 @@ type FilterQuery struct {
 }
 
 func (f *FilterQuery) decode() {
-	f.tablePrefix = GlobalTrinity.setting.Database.TablePrefix
 	params := strings.Split(f.QueryName, spiltValue)
 	paramsLen := len(params)
 	if paramsLen == 1 {
@@ -190,8 +189,9 @@ func FilterByFilter(c *gin.Context, FilterByList []string, FilterCustomizeFunc m
 				continue
 			}
 			filter := &FilterQuery{
-				QueryName:  queryName,
-				QueryValue: queryValue,
+				QueryName:   queryName,
+				QueryValue:  queryValue,
+				tablePrefix: GlobalTrinity.setting.Database.TablePrefix,
 			}
 			filter.GetFilterQuerySQL()
 			if filter.ValueSQL == nil {
