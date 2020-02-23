@@ -6,28 +6,45 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// GetResourceByid : Retrieve method
-func GetResourceByid(r *RetrieveMixin) {
-	id, err := strconv.ParseInt(r.ViewSetRunTime.Gcontext.Params.ByName("id"), 10, 64)
+// RetriveHandler : List method
+func RetriveHandler(r *RetrieveMixin) {
+	// if Callback BeforeGet registered , run before get callback
+	if IsFuncInited(r.ViewSetRunTime.BeforeRetrieve) {
+		r.ViewSetRunTime.BeforeRetrieve(r.ViewSetRunTime)
+	}
+	// if Callback Get registered , run before get callback, if not , run default get callback
+	if IsFuncInited(r.ViewSetRunTime.Retrieve) {
+		r.ViewSetRunTime.Retrieve(r.ViewSetRunTime)
+	}
+	// if Callback AfterGet registered , run before get callback, if not , run default get callback
+	if IsFuncInited(r.ViewSetRunTime.AfterRetrieve) {
+		r.ViewSetRunTime.AfterRetrieve(r.ViewSetRunTime)
+	}
+	r.ViewSetRunTime.Response()
+}
+
+// DefaultRetrieveCallback : Retrieve method
+func DefaultRetrieveCallback(r *ViewSetRunTime) {
+	id, err := strconv.ParseInt(r.Gcontext.Params.ByName("id"), 10, 64)
 	if err != nil {
-		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrLoadDataFailed)
+		r.HandleResponse(400, nil, err, ErrLoadDataFailed)
 		return
 	}
-	if err := r.ViewSetRunTime.Db.Scopes(
-		r.ViewSetRunTime.DBFilterBackend,
+	if err := r.Db.Scopes(
+		r.DBFilterBackend,
 		FilterByParam(id),
-		FilterByFilter(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.FilterByList, r.ViewSetRunTime.FilterCustomizeFunc),
-		QueryBySelect(r.ViewSetRunTime.Gcontext),
-		QueryByPreload(r.ViewSetRunTime.PreloadList),
-	).Table(r.ViewSetRunTime.ResourceTableName).First(r.ViewSetRunTime.ModelSerializer).Error; err != nil {
+		FilterByFilter(r.Gcontext, r.FilterByList, r.FilterCustomizeFunc),
+		QueryBySelect(r.Gcontext),
+		QueryByPreload(r.PreloadList),
+	).Table(r.ResourceTableName).First(r.ModelSerializer).Error; err != nil {
 		if gorm.IsRecordNotFoundError(err) {
-			r.ViewSetRunTime.HandleResponse(400, nil, err, gorm.ErrRecordNotFound)
+			r.HandleResponse(400, nil, err, gorm.ErrRecordNotFound)
 			return
 
 		}
-		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrLoadDataFailed)
+		r.HandleResponse(400, nil, err, ErrLoadDataFailed)
 		return
 	}
-	r.ViewSetRunTime.HandleResponse(200, r.ViewSetRunTime.ModelSerializer, nil, nil)
+	r.HandleResponse(200, r.ModelSerializer, nil, nil)
 	return
 }

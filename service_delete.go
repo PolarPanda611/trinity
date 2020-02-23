@@ -2,22 +2,40 @@ package trinity
 
 import "strconv"
 
-// DeleteResource : DELETE method
-func DeleteResource(r *DeleteMixin) {
-	id, err := strconv.ParseInt(r.ViewSetRunTime.Gcontext.Params.ByName("id"), 10, 64)
+// DeleteHandler : DELETE method
+func DeleteHandler(r *DeleteMixin) {
+	// if Callback BeforeDelete registered , run before Delete callback
+	if IsFuncInited(r.ViewSetRunTime.BeforeDelete) {
+		r.ViewSetRunTime.BeforeDelete(r.ViewSetRunTime)
+	}
+	// if Callback Delete registered , run before Delete callback, if not , run default Delete callback
+	if IsFuncInited(r.ViewSetRunTime.Delete) {
+		r.ViewSetRunTime.Delete(r.ViewSetRunTime)
+	}
+
+	// if Callback AfterDelete registered , run before Delete callback, if not , run default Delete callback
+	if IsFuncInited(r.ViewSetRunTime.AfterDelete) {
+		r.ViewSetRunTime.AfterDelete(r.ViewSetRunTime)
+	}
+	r.ViewSetRunTime.Response()
+}
+
+// DefaultDeleteCallback default delete callback
+func DefaultDeleteCallback(r *ViewSetRunTime) {
+	id, err := strconv.ParseInt(r.Gcontext.Params.ByName("id"), 10, 64)
 	if err != nil {
-		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrDeleteDataFailed)
+		r.HandleResponse(400, nil, err, ErrDeleteDataFailed)
 		return
 	}
-	if err := r.ViewSetRunTime.Db.Scopes(
-		r.ViewSetRunTime.DBFilterBackend,
+	if err := r.Db.Scopes(
+		r.DBFilterBackend,
 		FilterByParam(id),
-		FilterByFilter(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.FilterByList, r.ViewSetRunTime.FilterCustomizeFunc),
-		FilterBySearch(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.SearchingByList),
-	).Table(r.ViewSetRunTime.ResourceTableName).Delete(r.ViewSetRunTime.ModelSerializer).Error; err != nil {
-		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrDeleteDataFailed)
+		FilterByFilter(r.Gcontext, r.FilterByList, r.FilterCustomizeFunc),
+		FilterBySearch(r.Gcontext, r.SearchingByList),
+	).Table(r.ResourceTableName).Delete(r.ModelSerializer).Error; err != nil {
+		r.HandleResponse(400, nil, err, ErrDeleteDataFailed)
 		return
 	}
-	r.ViewSetRunTime.HandleResponse(200, "Delete Successfully", nil, nil)
+	r.HandleResponse(200, "Delete Successfully", nil, nil)
 	return
 }

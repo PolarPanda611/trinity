@@ -5,53 +5,60 @@ import (
 	"strconv"
 )
 
-// GetResourceList : List method
-func GetResourceList(r *GetMixin) {
-	// if r.ViewSetRunTime.BeforeGet != nil {
+// GetHandler : List method
+func GetHandler(r *GetMixin) {
+	// if Callback BeforeGet registered , run before get callback
+	if IsFuncInited(r.ViewSetRunTime.BeforeGet) {
+		r.ViewSetRunTime.BeforeGet(r.ViewSetRunTime)
+	}
+	// if Callback Get registered , run before get callback, if not , run default get callback
+	if IsFuncInited(r.ViewSetRunTime.Get) {
+		r.ViewSetRunTime.Get(r.ViewSetRunTime)
+	}
+	// if Callback AfterGet registered , run before get callback, if not , run default get callback
+	if IsFuncInited(r.ViewSetRunTime.AfterGet) {
+		r.ViewSetRunTime.AfterGet(r.ViewSetRunTime)
+	}
+	r.ViewSetRunTime.Response()
+}
 
-	// }
-	// if r.ViewSetRunTime.Get != nil {
-
-	// }
-	// if r.ViewSetRunTime.AfterGet != nil {
-
-	// }
-
+// DefaultGetCallback Default GetHandler
+func DefaultGetCallback(r *ViewSetRunTime) {
 	//Pagination Configure
 	//if ispagi true :  return count , next page ,data
 	//if ispagi false :  return data only
 	var count uint
-	PaginationOn := r.ViewSetRunTime.Gcontext.DefaultQuery("PaginationOn", "true")
+	PaginationOn := r.Gcontext.DefaultQuery("PaginationOn", "true")
 	switch PaginationOn {
 	case "true":
-		if err := r.ViewSetRunTime.Db.Scopes(
-			r.ViewSetRunTime.DBFilterBackend,
-			FilterByFilter(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.FilterByList, r.ViewSetRunTime.FilterCustomizeFunc),
-			FilterBySearch(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.SearchingByList),
-			QueryBySelect(r.ViewSetRunTime.Gcontext),
-			QueryByOrdering(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.OrderingByList),
-			QueryByPagination(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.PageSize),
-			QueryByPreload(r.ViewSetRunTime.PreloadList),
-		).Table(r.ViewSetRunTime.ResourceTableName).Find(r.ViewSetRunTime.ModelSerializerlist).Limit(-1).Offset(-1).Count(&count).Error; err != nil {
-			r.ViewSetRunTime.HandleResponse(400, nil, err, ErrLoadDataFailed)
+		if err := r.Db.Scopes(
+			r.DBFilterBackend,
+			FilterByFilter(r.Gcontext, r.FilterByList, r.FilterCustomizeFunc),
+			FilterBySearch(r.Gcontext, r.SearchingByList),
+			QueryBySelect(r.Gcontext),
+			QueryByOrdering(r.Gcontext, r.OrderingByList),
+			QueryByPagination(r.Gcontext, r.PageSize),
+			QueryByPreload(r.PreloadList),
+		).Table(r.ResourceTableName).Find(r.ModelSerializerlist).Limit(-1).Offset(-1).Count(&count).Error; err != nil {
+			r.HandleResponse(400, nil, err, ErrLoadDataFailed)
 			return
 		}
-		currentPageNum := r.ViewSetRunTime.Gcontext.DefaultQuery("PageNum", "1")
+		currentPageNum := r.Gcontext.DefaultQuery("PageNum", "1")
 		currentPageNumInt, err := strconv.Atoi(currentPageNum)
 		if err != nil || currentPageNumInt < 0 {
 			currentPageNumInt = 1
 		}
 
-		PageSizeField := r.ViewSetRunTime.Gcontext.DefaultQuery("PageSize", string(r.ViewSetRunTime.PageSize))
+		PageSizeField := r.Gcontext.DefaultQuery("PageSize", string(r.PageSize))
 		PageSizeFieldInt, err := strconv.Atoi(PageSizeField)
 		if err != nil {
-			PageSizeFieldInt = r.ViewSetRunTime.PageSize
+			PageSizeFieldInt = r.PageSize
 		}
 		//solve datalist return length =0 and return null problem
 		var res map[string]interface{}
 		if count > 0 {
 			res = map[string]interface{}{
-				"data":        r.ViewSetRunTime.ModelSerializerlist,
+				"data":        r.ModelSerializerlist,
 				"currentpage": currentPageNumInt,
 				"totalcount":  count,
 				"totalpage":   math.Ceil(float64(count) / float64(PageSizeFieldInt)),
@@ -64,22 +71,21 @@ func GetResourceList(r *GetMixin) {
 				"totalpage":   math.Ceil(float64(count) / float64(PageSizeFieldInt)),
 			}
 		}
-		r.ViewSetRunTime.HandleResponse(200, res, nil, nil)
+		r.HandleResponse(200, res, nil, nil)
 		return
 	default:
-		if err := r.ViewSetRunTime.Db.Scopes(
-			r.ViewSetRunTime.DBFilterBackend,
-			FilterByFilter(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.FilterByList, r.ViewSetRunTime.FilterCustomizeFunc),
-			FilterBySearch(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.SearchingByList),
-			QueryBySelect(r.ViewSetRunTime.Gcontext),
-			QueryByOrdering(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.OrderingByList),
-			QueryByPreload(r.ViewSetRunTime.PreloadList),
-		).Table(r.ViewSetRunTime.ResourceTableName).Find(r.ViewSetRunTime.ModelSerializerlist).Error; err != nil {
-			r.ViewSetRunTime.HandleResponse(400, nil, err, ErrLoadDataFailed)
+		if err := r.Db.Scopes(
+			r.DBFilterBackend,
+			FilterByFilter(r.Gcontext, r.FilterByList, r.FilterCustomizeFunc),
+			FilterBySearch(r.Gcontext, r.SearchingByList),
+			QueryBySelect(r.Gcontext),
+			QueryByOrdering(r.Gcontext, r.OrderingByList),
+			QueryByPreload(r.PreloadList),
+		).Table(r.ResourceTableName).Find(r.ModelSerializerlist).Error; err != nil {
+			r.HandleResponse(400, nil, err, ErrLoadDataFailed)
 			return
 		}
-		r.ViewSetRunTime.HandleResponse(200, r.ViewSetRunTime.ModelSerializerlist, nil, nil)
+		r.HandleResponse(200, r.ModelSerializerlist, nil, nil)
 		return
 	}
-
 }

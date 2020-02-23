@@ -60,6 +60,12 @@ func (t *Trinity) initViewSetCfg() {
 		EnableChangeLog:      false,
 		EnableDataVersion:    true,
 		EnableVersionControl: false,
+		Retrieve:             DefaultRetrieveCallback,
+		Get:                  DefaultGetCallback,
+		Post:                 DefaultPostCallback,
+		Put:                  DefaultPutCallback,
+		Patch:                DefaultPatchCallback,
+		Delete:               DefaultDeleteCallback,
 	}
 	t.vCfg = v
 
@@ -151,16 +157,33 @@ func (v *ViewSetCfg) NewRunTime(c *gin.Context, ResourceModel interface{}, Model
 		EnableChangeLog:       v.EnableChangeLog,
 		EnableDataVersion:     v.EnableDataVersion,
 		EnableVersionControl:  v.EnableVersionControl,
-		Retrieve:              v.Retrieve,
-		Get:                   v.Get,
-		PostValidation:        v.PostValidation,
-		Post:                  v.Post,
-		PutValidation:         v.PutValidation,
-		Put:                   v.Put,
-		PatchValidation:       v.PatchValidation,
-		Patch:                 v.Patch,
-		Delete:                v.Delete,
-		Cfg:                   v,
+
+		BeforeRetrieve: v.BeforeRetrieve,
+		Retrieve:       v.Retrieve,
+		AfterRetrieve:  v.AfterRetrieve,
+
+		BeforeGet: v.BeforeGet,
+		Get:       v.Get,
+		AfterGet:  v.AfterGet,
+
+		PostValidation: v.PostValidation,
+		BeforePost:     v.BeforePost,
+		Post:           v.Post,
+		AfterPost:      v.AfterPost,
+
+		BeforePut:     v.BeforePut,
+		PutValidation: v.PutValidation,
+		Put:           v.Put,
+		AfterPut:      v.AfterPut,
+
+		BeforePatch:     v.BeforePatch,
+		PatchValidation: v.PatchValidation,
+		Patch:           v.Patch,
+		AfterPatch:      v.AfterPatch,
+		BeforeDelete:    v.BeforeDelete,
+		Delete:          v.Delete,
+		AfterDelete:     v.AfterDelete,
+		Cfg:             v,
 	}
 	vRun.DBLogger = &defaultViewRuntimeLogger{ViewRuntime: vRun}
 	vRun.Db.SetLogger(vRun.DBLogger)
@@ -179,9 +202,7 @@ func (v *ViewSetCfg) NewRunTime(c *gin.Context, ResourceModel interface{}, Model
 // 6.do the request
 func (v *ViewSetRunTime) ViewSetServe() {
 	//set default value for viewCfg
-	// handle request start
-	var h ReqMixinHandler
-	var ch func(r *ViewSetRunTime) // Customize Handler
+
 	// first level : authentication control
 	if v.HasAuthCtl {
 		err := v.AuthenticationBackend(v.Gcontext)
@@ -209,43 +230,32 @@ func (v *ViewSetRunTime) ViewSetServe() {
 	}
 	v.Db = v.Db.Set("UserID", v.Gcontext.GetInt64("UserID"))
 
+	// handle request start
+	var h ReqMixinHandler
 	switch v.Method {
 	case "RETRIEVE":
-		// Retrieve request
 		h = &RetrieveMixin{v}
-		ch = v.Retrieve
 		break
 	case "GET":
-		// Get request
 		h = &GetMixin{v}
-		ch = v.Get
 		break
 	case "POST":
-		// Post request
 		h = &PostMixin{v}
-		ch = v.Post
 		break
 	case "PUT":
-		// Put request
 		h = &PutMixin{v}
-		ch = v.Put
 		break
 	case "PATCH":
-		// Patch request
 		h = &PatchMixin{v}
-		ch = v.Patch
 		break
 	case "DELETE":
-		// Delete request
 		h = &DeleteMixin{v}
-		ch = v.Delete
 		break
 	default:
-		// Unknown request
 		h = &UnknownMixin{v}
 		break
 	}
-	HandleServices(h, v, ch)
+	h.Handler()
 	return
 
 }

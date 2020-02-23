@@ -37,37 +37,36 @@ type UnknownMixin struct {
 
 // Handler for handle retrieve request
 func (r *RetrieveMixin) Handler() {
-	GetResourceByid(r)
+	RetriveHandler(r)
 	return
 }
 
 // Handler for handle retrieve request
 func (r *GetMixin) Handler() {
-	GetResourceList(r)
+	GetHandler(r)
 	return
 }
 
 // Handler for handle post request
 func (r *PostMixin) Handler() {
-	CreateResource(r)
+	PostHandler(r)
 	return
 }
 
 // Handler for handle patch request
 func (r *PatchMixin) Handler() {
-	PatchResource(r)
+	PatchHandler(r)
 	return
 }
 
 // Handler for handle put request
 func (r *PutMixin) Handler() {
-	r.ViewSetRunTime.HandleResponse(200, "PutMixin", nil, nil)
-	return
+	PutHandler(r)
 }
 
 // Handler for handle delete request
 func (r *DeleteMixin) Handler() {
-	DeleteResource(r)
+	DeleteHandler(r)
 	return
 }
 
@@ -80,14 +79,4 @@ func (r *UnknownMixin) Handler() {
 //ReqMixinHandler for handle mixin
 type ReqMixinHandler interface {
 	Handler()
-}
-
-// HandleServices for multi response
-func HandleServices(m ReqMixinHandler, v *ViewSetRunTime, cHandler ...func(r *ViewSetRunTime)) {
-	if len(cHandler) == 1 && cHandler[0] != nil {
-		cHandler[0](v)
-		return
-	}
-	m.Handler()
-	return
 }

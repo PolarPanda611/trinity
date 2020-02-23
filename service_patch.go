@@ -9,32 +9,49 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// PatchResource : PATCH method
-func PatchResource(r *PatchMixin) {
+// PatchHandler : List method
+func PatchHandler(r *PatchMixin) {
+	// if Callback BeforeGet registered , run before get callback
+	if IsFuncInited(r.ViewSetRunTime.BeforePatch) {
+		r.ViewSetRunTime.BeforePatch(r.ViewSetRunTime)
+	}
+	// if Callback Get registered , run before get callback, if not , run default get callback
+	if IsFuncInited(r.ViewSetRunTime.Patch) {
+		r.ViewSetRunTime.Patch(r.ViewSetRunTime)
+	}
+	// if Callback AfterGet registered , run before get callback, if not , run default get callback
+	if IsFuncInited(r.ViewSetRunTime.AfterPatch) {
+		r.ViewSetRunTime.AfterPatch(r.ViewSetRunTime)
+	}
+	r.ViewSetRunTime.Response()
+}
+
+// DefaultPatchCallback : PATCH method
+func DefaultPatchCallback(r *ViewSetRunTime) {
 
 	buf := make([]byte, 1024)
-	n, _ := r.ViewSetRunTime.Gcontext.Request.Body.Read(buf)
+	n, _ := r.Gcontext.Request.Body.Read(buf)
 	requestbodyMap := make(map[string]interface{})
 	if err := json.Unmarshal(buf[0:n], &requestbodyMap); err != nil {
-		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrResolveDataFailed)
+		r.HandleResponse(400, nil, err, ErrResolveDataFailed)
 		return
 	}
-	id, err := strconv.ParseInt(r.ViewSetRunTime.Gcontext.Params.ByName("id"), 10, 64)
+	id, err := strconv.ParseInt(r.Gcontext.Params.ByName("id"), 10, 64)
 	if err != nil {
-		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrUpdateDataFailed)
+		r.HandleResponse(400, nil, err, ErrUpdateDataFailed)
 		return
 	}
 	delete(requestbodyMap, "key")
-	if r.ViewSetRunTime.EnableChangeLog {
-		searchOldValue := reflect.New(reflect.ValueOf(r.ViewSetRunTime.ModelSerializer).Elem().Type()).Interface()
+	if r.EnableChangeLog {
+		searchOldValue := reflect.New(reflect.ValueOf(r.ModelSerializer).Elem().Type()).Interface()
 
-		if err := r.ViewSetRunTime.Db.Scopes(
-			r.ViewSetRunTime.DBFilterBackend,
+		if err := r.Db.Scopes(
+			r.DBFilterBackend,
 			FilterByParam(id),
-			FilterByFilter(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.FilterByList, r.ViewSetRunTime.FilterCustomizeFunc),
-			FilterBySearch(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.SearchingByList),
-		).Table(r.ViewSetRunTime.ResourceTableName).First(searchOldValue).Error; err != nil {
-			r.ViewSetRunTime.HandleResponse(400, nil, err, ErrUpdateDataFailed)
+			FilterByFilter(r.Gcontext, r.FilterByList, r.FilterCustomizeFunc),
+			FilterBySearch(r.Gcontext, r.SearchingByList),
+		).Table(r.ResourceTableName).First(searchOldValue).Error; err != nil {
+			r.HandleResponse(400, nil, err, ErrUpdateDataFailed)
 			return
 		}
 		v := reflect.ValueOf(searchOldValue).Elem()
@@ -49,7 +66,7 @@ func PatchResource(r *PatchMixin) {
 				oldDataMap["d_version"] = model.DVersion
 			}
 		}
-		userID := r.ViewSetRunTime.Gcontext.GetInt64("UserID")
+		userID := r.Gcontext.GetInt64("UserID")
 		for k, v := range requestbodyMap {
 			oldValue := oldDataMap[k]
 			newValue := fmt.Sprint(reflect.ValueOf(v))
@@ -58,41 +75,41 @@ func PatchResource(r *PatchMixin) {
 			}
 			changeLog := AppChangelog{
 				Logmodel:    Logmodel{CreateUserID: userID},
-				Resource:    r.ViewSetRunTime.ResourceTableName,
+				Resource:    r.ResourceTableName,
 				Type:        "Update",
 				Column:      k,
 				OldValue:    oldValue,
 				NewValue:    newValue,
 				DVersion:    oldDataMap["d_version"],
-				TraceID:     r.ViewSetRunTime.Gcontext.GetString("TraceID"),
-				ResourceKey: r.ViewSetRunTime.Gcontext.Params.ByName("id"),
+				TraceID:     r.Gcontext.GetString("TraceID"),
+				ResourceKey: r.Gcontext.Params.ByName("id"),
 			}
-			if err := r.ViewSetRunTime.Db.Create(&changeLog).Error; err != nil {
-				r.ViewSetRunTime.HandleResponse(400, nil, err, ErrUpdateDataFailed)
+			if err := r.Db.Create(&changeLog).Error; err != nil {
+				r.HandleResponse(400, nil, err, ErrUpdateDataFailed)
 				return
 			}
 		}
 	}
-	if r.ViewSetRunTime.EnableVersionControl {
+	if r.EnableVersionControl {
 
 	}
-	updateQuery := r.ViewSetRunTime.Db.Set("gorm:save_associations", false).Scopes(
-		r.ViewSetRunTime.DBFilterBackend,
+	updateQuery := r.Db.Set("gorm:save_associations", false).Scopes(
+		r.DBFilterBackend,
 		FilterByParam(id),
-		FilterByFilter(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.FilterByList, r.ViewSetRunTime.FilterCustomizeFunc),
-		FilterBySearch(r.ViewSetRunTime.Gcontext, r.ViewSetRunTime.SearchingByList),
-		DataVersionFilter(requestbodyMap["d_version"], r.ViewSetRunTime.EnableDataVersion),
-	).Table(r.ViewSetRunTime.ResourceTableName).Updates(requestbodyMap)
+		FilterByFilter(r.Gcontext, r.FilterByList, r.FilterCustomizeFunc),
+		FilterBySearch(r.Gcontext, r.SearchingByList),
+		DataVersionFilter(requestbodyMap["d_version"], r.EnableDataVersion),
+	).Table(r.ResourceTableName).Updates(requestbodyMap)
 
 	if err := updateQuery.Error; err != nil {
-		r.ViewSetRunTime.HandleResponse(400, nil, err, ErrUpdateDataFailed)
+		r.HandleResponse(400, nil, err, ErrUpdateDataFailed)
 		return
 	}
 	if effectNum := updateQuery.RowsAffected; effectNum != 1 {
-		r.ViewSetRunTime.HandleResponse(400, nil, ErrUpdateZeroAffected, ErrUpdateDataFailed)
+		r.HandleResponse(400, nil, ErrUpdateZeroAffected, ErrUpdateDataFailed)
 		return
 	}
-	r.ViewSetRunTime.HandleResponse(200, "Updated Successfully", nil, nil)
+	r.HandleResponse(200, "Updated Successfully", nil, nil)
 	return
 
 }

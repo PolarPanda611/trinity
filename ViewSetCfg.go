@@ -7,6 +7,9 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+// MixinCallback type
+type MixinCallback func(r *ViewSetRunTime)
+
 // ViewSetRunTime : put runtime data
 type ViewSetRunTime struct {
 	mu      sync.Mutex
@@ -45,21 +48,40 @@ type ViewSetRunTime struct {
 	EnableChangeLog       bool
 	EnableDataVersion     bool
 	EnableVersionControl  bool
-	Retrieve              func(r *ViewSetRunTime)
-	Get                   func(r *ViewSetRunTime)
-	// PostValidation : validation for post body data
+
+	// Retrieve
+	BeforeRetrieve MixinCallback
+	Retrieve       MixinCallback
+	AfterRetrieve  MixinCallback
+
+	// Get
+	BeforeGet MixinCallback
+	Get       MixinCallback
+	AfterGet  MixinCallback
+
+	// Post
 	PostValidation interface{}
-	// Post: customize Post func
-	Post func(r *ViewSetRunTime)
-	// PutValidation : validation for put body data
+	BeforePost     MixinCallback
+	Post           MixinCallback
+	AfterPost      MixinCallback
+
+	// Put
 	PutValidation interface{}
-	// Put: customize Put func
-	Put func(r *ViewSetRunTime)
-	// PatchValidation : validation for patch body data
+	BeforePut     MixinCallback
+	Put           MixinCallback
+	AfterPut      MixinCallback
+
+	// Patch
 	PatchValidation interface{}
-	// Patch: customize Patch func
-	Patch    func(r *ViewSetRunTime)
-	Delete   func(r *ViewSetRunTime)
+	BeforePatch     MixinCallback
+	Patch           MixinCallback
+	AfterPatch      MixinCallback
+
+	// Delete
+	BeforeDelete MixinCallback
+	Delete       MixinCallback
+	AfterDelete  MixinCallback
+
 	Cfg      *ViewSetCfg
 	DBLogger Logger
 
@@ -130,22 +152,36 @@ type ViewSetCfg struct {
 	EnableDataVersion bool
 	// EnableHistory enable history version
 	EnableVersionControl bool
-	// Retrieve: customize retrieve func
-	Retrieve func(r *ViewSetRunTime)
-	// Get: customize Get func
-	Get func(r *ViewSetRunTime)
-	// PostValidation : validation for post body data
+	// Retrieve
+	BeforeRetrieve MixinCallback
+	Retrieve       MixinCallback
+	AfterRetrieve  MixinCallback
+
+	// Get
+	BeforeGet MixinCallback
+	Get       MixinCallback
+	AfterGet  MixinCallback
+
+	// Post
 	PostValidation interface{}
-	// Post: customize Post func
-	Post func(r *ViewSetRunTime)
-	// PutValidation : validation for put body data
+	BeforePost     MixinCallback
+	Post           MixinCallback
+	AfterPost      MixinCallback
+
+	// Put
 	PutValidation interface{}
-	// Put: customize Put func
-	Put func(r *ViewSetRunTime)
-	// PatchValidation : validation for patch body data
+	BeforePut     MixinCallback
+	Put           MixinCallback
+	AfterPut      MixinCallback
+
+	// Patch
 	PatchValidation interface{}
-	// Patch: customize Patch func
-	Patch func(r *ViewSetRunTime)
-	// Delete: customize Delete func
-	Delete func(r *ViewSetRunTime)
+	BeforePatch     MixinCallback
+	Patch           MixinCallback
+	AfterPatch      MixinCallback
+
+	// Delete
+	BeforeDelete MixinCallback
+	Delete       MixinCallback
+	AfterDelete  MixinCallback
 }

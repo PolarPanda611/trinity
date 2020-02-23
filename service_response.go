@@ -58,5 +58,7 @@ func (v *ViewSetRunTime) HandleResponse(status int, payload interface{}, rerr er
 	v.RealError = rerr
 	v.UserError = uerr
 	v.mu.Unlock()
-	v.Response()
+	if v.RealError != nil {
+		v.Response()
+	}
 }

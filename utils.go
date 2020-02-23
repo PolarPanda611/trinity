@@ -159,3 +159,12 @@ func GenerateSnowFlakeID(nodenumber int64) int64 {
 	return id
 
 }
+
+// IsFuncInited : is function inited : true inited function , false not inited or not a function
+func IsFuncInited(function MixinCallback) bool {
+	if function == nil {
+		return false
+	}
+	return true
+
+}
