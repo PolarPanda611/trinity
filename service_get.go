@@ -19,7 +19,9 @@ func GetHandler(r *GetMixin) {
 	if IsFuncInited(r.ViewSetRunTime.AfterGet) {
 		r.ViewSetRunTime.AfterGet(r.ViewSetRunTime)
 	}
-	r.ViewSetRunTime.Response()
+	if r.ViewSetRunTime.RealError == nil {
+		r.ViewSetRunTime.Response()
+	}
 }
 
 // DefaultGetCallback Default GetHandler

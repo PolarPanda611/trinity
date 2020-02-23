@@ -1,7 +1,5 @@
 package trinity
 
-import ()
-
 // PutHandler : List method
 func PutHandler(r *PutMixin) {
 	// if Callback BeforeGet registered , run before get callback
@@ -16,7 +14,9 @@ func PutHandler(r *PutMixin) {
 	if IsFuncInited(r.ViewSetRunTime.AfterPut) {
 		r.ViewSetRunTime.AfterPut(r.ViewSetRunTime)
 	}
-	r.ViewSetRunTime.Response()
+	if r.ViewSetRunTime.RealError == nil {
+		r.ViewSetRunTime.Response()
+	}
 }
 
 // DefaultPutCallback : PATCH method

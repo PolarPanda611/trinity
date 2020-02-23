@@ -1,6 +1,8 @@
 package trinity
 
 import (
+	"fmt"
+	"reflect"
 	"strconv"
 
 	"github.com/jinzhu/gorm"
@@ -20,7 +22,10 @@ func RetriveHandler(r *RetrieveMixin) {
 	if IsFuncInited(r.ViewSetRunTime.AfterRetrieve) {
 		r.ViewSetRunTime.AfterRetrieve(r.ViewSetRunTime)
 	}
-	r.ViewSetRunTime.Response()
+	if r.ViewSetRunTime.RealError == nil {
+		r.ViewSetRunTime.Response()
+	}
+
 }
 
 // DefaultRetrieveCallback : Retrieve method
@@ -30,13 +35,15 @@ func DefaultRetrieveCallback(r *ViewSetRunTime) {
 		r.HandleResponse(400, nil, err, ErrLoadDataFailed)
 		return
 	}
+	fmt.Println(reflect.TypeOf(r.ResourceModel))
+	resourcemodelList := reflect.New(reflect.TypeOf(r.ResourceModel)).Interface()
 	if err := r.Db.Scopes(
 		r.DBFilterBackend,
 		FilterByParam(id),
 		FilterByFilter(r.Gcontext, r.FilterByList, r.FilterCustomizeFunc),
 		QueryBySelect(r.Gcontext),
 		QueryByPreload(r.PreloadList),
-	).Table(r.ResourceTableName).First(r.ModelSerializer).Error; err != nil {
+	).Table(r.ResourceTableName).First(&resourcemodelList).Error; err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			r.HandleResponse(400, nil, err, gorm.ErrRecordNotFound)
 			return

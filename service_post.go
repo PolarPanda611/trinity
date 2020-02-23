@@ -16,7 +16,9 @@ func PostHandler(r *PostMixin) {
 	if IsFuncInited(r.ViewSetRunTime.AfterPost) {
 		r.ViewSetRunTime.AfterPost(r.ViewSetRunTime)
 	}
-	r.ViewSetRunTime.Response()
+	if r.ViewSetRunTime.RealError == nil {
+		r.ViewSetRunTime.Response()
+	}
 }
 
 // DefaultPostCallback : Create method

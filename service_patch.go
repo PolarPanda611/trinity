@@ -23,7 +23,9 @@ func PatchHandler(r *PatchMixin) {
 	if IsFuncInited(r.ViewSetRunTime.AfterPatch) {
 		r.ViewSetRunTime.AfterPatch(r.ViewSetRunTime)
 	}
-	r.ViewSetRunTime.Response()
+	if r.ViewSetRunTime.RealError == nil {
+		r.ViewSetRunTime.Response()
+	}
 }
 
 // DefaultPatchCallback : PATCH method

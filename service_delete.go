@@ -17,7 +17,9 @@ func DeleteHandler(r *DeleteMixin) {
 	if IsFuncInited(r.ViewSetRunTime.AfterDelete) {
 		r.ViewSetRunTime.AfterDelete(r.ViewSetRunTime)
 	}
-	r.ViewSetRunTime.Response()
+	if r.ViewSetRunTime.RealError == nil {
+		r.ViewSetRunTime.Response()
+	}
 }
 
 // DefaultDeleteCallback default delete callback
