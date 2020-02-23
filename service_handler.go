@@ -76,7 +76,7 @@ func (r *UnknownMixin) Handler() {
 	return
 }
 
-//ReqMixinHandler for handle mixin
-type ReqMixinHandler interface {
+//ServiceHandler for handle mixin
+type ServiceHandler interface {
 	Handler()
 }

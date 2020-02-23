@@ -34,7 +34,7 @@ type ViewSetRunTime struct {
 	// if do the auth check ,default false
 	HasAuthCtl            bool
 	AuthenticationBackend func(c *gin.Context) error
-	GetCurrentUserAuth    interface{}
+	GetCurrentUserAuth    func(c *gin.Context, db *gorm.DB) error
 	AccessBackendRequire  []string
 	AccessBackendCheck    func(v *ViewSetRunTime) error
 	DBFilterBackend       func(db *gorm.DB) *gorm.DB // current dbfilterbackend
@@ -117,7 +117,7 @@ type ViewSetCfg struct {
 	// please set UserPermission and UserKey in context
 	// e.g : c.Set("UserKey",UserKey) with c.GetString("UserID")
 	// e.g : c.Set("UserPermission", UserPermission) with c.GetString("UserID")
-	GetCurrentUserAuth interface{}
+	GetCurrentUserAuth func(c *gin.Context, db *gorm.DB) error
 	// AccessBackendReqMap
 	// if HasAuthCtl == false ; pass... customize the access require permission
 	AccessBackendRequireMap map[string][]string
