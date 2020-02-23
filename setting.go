@@ -101,8 +101,9 @@ type Setting struct {
 			Idletimeout int
 		}
 		Gcache struct {
-			CacheSize int `yaml:"cachesize"`
-			Timeout   int `yaml:"timeout"` // hour
+			CacheAlgorithm string `yaml:"cache_algorithm"`
+			CacheSize      int    `yaml:"cachesize"`
+			Timeout        int    `yaml:"timeout"` // hour
 		}
 	}
 	Database struct {
@@ -148,4 +149,38 @@ func (t *Trinity) loadSetting(customizeSettingSlice ...CustomizeSetting) {
 		v.Load(t.runMode, t.configFilePath)
 	}
 
+}
+
+// GetConfigFilePath  get rootpath
+func (t *Trinity) GetConfigFilePath() string {
+	t.mu.RLock()
+	r := t.configFilePath
+	t.mu.RUnlock()
+	return r
+}
+
+// SetConfigFilePath  get rootpath
+func (t *Trinity) SetConfigFilePath(configFilePath string) *Trinity {
+	t.mu.Lock()
+	t.configFilePath = configFilePath
+	t.reloadTrinity()
+	t.mu.Unlock()
+	return t
+}
+
+// GetSetting  get setting
+func (t *Trinity) GetSetting() *Setting {
+	t.mu.RLock()
+	s := t.setting
+	t.mu.RUnlock()
+	return s
+}
+
+// SetSetting  set setting
+func (t *Trinity) SetSetting(s *Setting) *Trinity {
+	t.mu.Lock()
+	t.setting = s
+	t.reloadTrinity()
+	t.mu.Unlock()
+	return t
 }

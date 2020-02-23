@@ -64,6 +64,23 @@ func (t *Trinity) InitDatabase() {
 
 }
 
+// GetDB  get db instance
+func (t *Trinity) GetDB() *gorm.DB {
+	t.mu.RLock()
+	d := t.db
+	t.mu.RUnlock()
+	return d
+}
+
+// SetDB  set db instance
+func (t *Trinity) SetDB(db *gorm.DB) *Trinity {
+	t.mu.Lock()
+	t.db = db
+	t.reloadTrinity()
+	t.mu.Unlock()
+	return t
+}
+
 // updateTimeStampForCreateCallback will set `CreatedOn`, `ModifiedOn` when creating
 func updateTimeStampAndUUIDForCreateCallback(scope *gorm.Scope) {
 	if !scope.HasError() {

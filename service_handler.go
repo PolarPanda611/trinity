@@ -1,5 +1,10 @@
 package trinity
 
+//ServiceHandler for handle mixin
+type ServiceHandler interface {
+	Handler()
+}
+
 // RetrieveMixin for Get request
 type RetrieveMixin struct {
 	ViewSetRunTime *ViewSetRunTime
@@ -74,9 +79,4 @@ func (r *DeleteMixin) Handler() {
 func (r *UnknownMixin) Handler() {
 	r.ViewSetRunTime.HandleResponse(405, nil, ErrUnknownService, ErrUnknownService)
 	return
-}
-
-//ServiceHandler for handle mixin
-type ServiceHandler interface {
-	Handler()
 }

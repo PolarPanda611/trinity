@@ -88,8 +88,8 @@ func New(customizeSettingSlice ...CustomizeSetting) *Trinity {
 	t.InitDatabase()
 	t.initRouter()
 	t.initViewSetCfg()
+	t.initCache()
 	t.initDefaultValue()
-	t.cache = gcache.New(t.setting.Cache.Gcache.CacheSize).LRU().Expiration(time.Duration(t.setting.Cache.Gcache.Timeout) * time.Hour).Build()
 	t.mu.Unlock()
 	return t
 }
@@ -125,94 +125,10 @@ func (t *Trinity) GetVCfg() *ViewSetCfg {
 	return v
 }
 
-// GetCache  get vcfg
-func (t *Trinity) GetCache() gcache.Cache {
-	t.mu.RLock()
-	c := t.cache
-	t.mu.RUnlock()
-	return c
-}
-
-// SetCache  get vcfg
-func (t *Trinity) SetCache(cache gcache.Cache) *Trinity {
-	t.mu.Lock()
-	t.cache = cache
-	t.mu.Unlock()
-	return t
-}
-
 // SetVCfg  get vcfg
 func (t *Trinity) SetVCfg(newVCfg *ViewSetCfg) *Trinity {
 	t.mu.Lock()
 	t.vCfg = newVCfg
-	t.reloadTrinity()
-	t.mu.Unlock()
-	return t
-}
-
-// GetSetting  get setting
-func (t *Trinity) GetSetting() *Setting {
-	t.mu.RLock()
-	s := t.setting
-	t.mu.RUnlock()
-	return s
-}
-
-// SetSetting  set setting
-func (t *Trinity) SetSetting(s *Setting) *Trinity {
-	t.mu.RLock()
-	t.setting = s
-	t.reloadTrinity()
-	t.mu.RUnlock()
-	return t
-}
-
-// GetRouter  get router
-func (t *Trinity) GetRouter() *gin.Engine {
-	t.mu.RLock()
-	r := t.router
-	t.mu.RUnlock()
-	return r
-}
-
-// SetRouter  set router
-func (t *Trinity) SetRouter(newRouter *gin.Engine) *Trinity {
-	t.mu.Lock()
-	t.router = newRouter
-	t.reloadTrinity()
-	t.mu.Unlock()
-	return t
-}
-
-// GetDB  get db instance
-func (t *Trinity) GetDB() *gorm.DB {
-	t.mu.RLock()
-	d := t.db
-	t.mu.RUnlock()
-	return d
-}
-
-// SetDB  set db instance
-func (t *Trinity) SetDB(db *gorm.DB) *Trinity {
-	t.mu.Lock()
-	t.db = db
-	t.reloadTrinity()
-	t.mu.Unlock()
-	return t
-}
-
-// GetConfigFilePath  get rootpath
-func (t *Trinity) GetConfigFilePath() string {
-	t.mu.RLock()
-	r := t.configFilePath
-	t.mu.RUnlock()
-	return r
-}
-
-// SetConfigFilePath  get rootpath
-func (t *Trinity) SetConfigFilePath(configFilePath string) *Trinity {
-	t.mu.Lock()
-	t.configFilePath = configFilePath
 	t.reloadTrinity()
 	t.mu.Unlock()
 	return t

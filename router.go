@@ -57,6 +57,23 @@ func (t *Trinity) initRouter() {
 	t.router = r
 }
 
+// GetRouter  get router
+func (t *Trinity) GetRouter() *gin.Engine {
+	t.mu.RLock()
+	r := t.router
+	t.mu.RUnlock()
+	return r
+}
+
+// SetRouter  set router
+func (t *Trinity) SetRouter(newRouter *gin.Engine) *Trinity {
+	t.mu.Lock()
+	t.router = newRouter
+	t.reloadTrinity()
+	t.mu.Unlock()
+	return t
+}
+
 // NewAPIGroup register new apigroup
 func (t *Trinity) NewAPIGroup(path string) *gin.RouterGroup {
 	return t.router.Group(t.setting.Webapp.BaseURL + path)
