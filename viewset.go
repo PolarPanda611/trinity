@@ -57,6 +57,7 @@ func (t *Trinity) initViewSetCfg() {
 		SearchingByList:      []string{},
 		OrderingByList:       map[string]bool{},
 		PageSize:             t.setting.Webapp.PageSize,
+		EnableOrderBy:        true,
 		EnableChangeLog:      false,
 		EnableDataVersion:    true,
 		EnableVersionControl: false,
@@ -87,6 +88,7 @@ func (v *ViewSetCfg) clone() *ViewSetCfg {
 		SearchingByList:          v.SearchingByList,
 		OrderingByList:           v.OrderingByList,
 		PageSize:                 v.PageSize,
+		EnableOrderBy:            v.EnableOrderBy,
 		EnableChangeLog:          v.EnableChangeLog,
 		EnableDataVersion:        v.EnableDataVersion,
 		EnableVersionControl:     v.EnableVersionControl,
@@ -148,6 +150,7 @@ func (v *ViewSetRunTime) loadQuery() {
 	v.PageSize = v.Cfg.PageSize
 	v.PreloadList = v.Cfg.PreloadListMap[v.Method]
 	v.SearchingByList = v.Cfg.SearchingByList
+	v.EnableOrderBy = v.Cfg.EnableOrderBy
 }
 
 func (v *ViewSetRunTime) loadAuthBackend() {

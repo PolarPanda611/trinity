@@ -8,11 +8,14 @@ import (
 )
 
 //QueryByOrdering handle ordering
-func QueryByOrdering(c *gin.Context, OrderingByList map[string]bool) func(db *gorm.DB) *gorm.DB {
+func QueryByOrdering(c *gin.Context, EnableOrderBy bool, OrderingByList map[string]bool) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		//Searching Section : keywords : OrderingBy , separate by comma
 		//example : OrderingBy=-id,user,-name , - means desc , default asc
 		OrderByField := c.Query("OrderingBy")
+		if !EnableOrderBy {
+			return db
+		}
 		if OrderByField == "" {
 			return db.Order("id asc")
 		}

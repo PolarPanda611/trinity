@@ -45,6 +45,7 @@ type ViewSetRunTime struct {
 	SearchingByList       []string
 	OrderingByList        map[string]bool
 	PageSize              int
+	EnableOrderBy         bool
 	EnableChangeLog       bool
 	EnableDataVersion     bool
 	EnableVersionControl  bool
@@ -145,7 +146,8 @@ type ViewSetCfg struct {
 	OrderingByList map[string]bool
 	// PageSize default 10
 	// keyword : PageNum , PageSize to do the limit and offset
-	PageSize int
+	PageSize      int
+	EnableOrderBy bool
 	// EnableChangeLog enable change log
 	EnableChangeLog bool
 	// EnableDataVersion check

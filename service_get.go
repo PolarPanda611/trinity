@@ -38,7 +38,7 @@ func DefaultGetCallback(r *ViewSetRunTime) {
 			FilterByFilter(r.Gcontext, r.FilterByList, r.FilterCustomizeFunc),
 			FilterBySearch(r.Gcontext, r.SearchingByList),
 			QueryBySelect(r.Gcontext),
-			QueryByOrdering(r.Gcontext, r.OrderingByList),
+			QueryByOrdering(r.Gcontext, r.EnableOrderBy, r.OrderingByList),
 			QueryByPagination(r.Gcontext, r.PageSize),
 			QueryByPreload(r.PreloadList),
 		).Table(r.ResourceTableName).Find(r.ModelSerializerlist).Limit(-1).Offset(-1).Count(&count).Error; err != nil {
@@ -81,7 +81,7 @@ func DefaultGetCallback(r *ViewSetRunTime) {
 			FilterByFilter(r.Gcontext, r.FilterByList, r.FilterCustomizeFunc),
 			FilterBySearch(r.Gcontext, r.SearchingByList),
 			QueryBySelect(r.Gcontext),
-			QueryByOrdering(r.Gcontext, r.OrderingByList),
+			QueryByOrdering(r.Gcontext, r.EnableOrderBy, r.OrderingByList),
 			QueryByPreload(r.PreloadList),
 		).Table(r.ResourceTableName).Find(r.ModelSerializerlist).Error; err != nil {
 			r.HandleResponse(400, nil, err, ErrLoadDataFailed)

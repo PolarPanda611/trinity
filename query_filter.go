@@ -149,9 +149,15 @@ func DataVersionFilter(param interface{}, isCheck bool) func(db *gorm.DB) *gorm.
 //FilterByCustomizeCondition filter by customize condition
 func FilterByCustomizeCondition(ok bool, k string, v interface{}) func(db *gorm.DB) *gorm.DB {
 	if ok {
+		if v == nil {
+			return func(db *gorm.DB) *gorm.DB {
+				return db.Where(k)
+			}
+		}
 		return func(db *gorm.DB) *gorm.DB {
 			return db.Where(k, v)
 		}
+
 	}
 	return func(db *gorm.DB) *gorm.DB {
 		return db
