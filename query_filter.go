@@ -216,7 +216,7 @@ func FilterByFilter(c *gin.Context, FilterByList []string, FilterCustomizeFunc m
 func FilterBySearch(c *gin.Context, SearchingByList []string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		//Searching Section : keywords : Searchby
-		SearchValue := c.Query("Searchby")
+		SearchValue := c.Query("SearchBy")
 		if len(SearchValue) != 0 {
 			for i, searchField := range SearchingByList {
 				if i == 0 {
