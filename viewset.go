@@ -1,8 +1,8 @@
 package trinity
 
 import (
-	"github.com/PolarPanda611/gorm"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 // initViewSetCfg for  initial ViewSetCfg

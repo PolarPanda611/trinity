@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"strings"
 
-	"github.com/PolarPanda611/gorm"
+	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq" //pg
 	uuid "github.com/satori/go.uuid"
 )

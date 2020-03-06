@@ -3,8 +3,8 @@ package trinity
 import (
 	"strconv"
 
-	"github.com/PolarPanda611/gorm"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 //QueryByPagination handling pagination

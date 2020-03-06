@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/PolarPanda611/gorm"
+	"github.com/jinzhu/gorm"
 )
 
 // PatchHandler : List method

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/PolarPanda611/gorm"
+	"github.com/jinzhu/gorm"
 	"github.com/gin-gonic/gin"
 )
 
