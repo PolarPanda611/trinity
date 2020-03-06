@@ -1,6 +1,6 @@
 package trinity
 
-import "github.com/jinzhu/gorm"
+import "github.com/PolarPanda611/gorm"
 
 //QueryByPreload handling preload
 func QueryByPreload(PreloadList map[string]func(db *gorm.DB) *gorm.DB) func(db *gorm.DB) *gorm.DB {

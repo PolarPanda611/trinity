@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/PolarPanda611/gorm"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 )
 
 //QueryBySelect handling select

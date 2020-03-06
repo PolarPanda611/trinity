@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/PolarPanda611/gorm"
 	"github.com/bluele/gcache"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 )
 
 var (

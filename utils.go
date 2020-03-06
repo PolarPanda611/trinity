@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/PolarPanda611/gorm"
 	"github.com/bwmarrin/snowflake"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 )
 
 // RFC3339FullDate for rfc full date

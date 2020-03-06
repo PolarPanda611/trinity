@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jinzhu/gorm"
+	"github.com/PolarPanda611/gorm"
 )
 
 // LogFormat log format struct

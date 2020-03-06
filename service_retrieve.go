@@ -3,7 +3,7 @@ package trinity
 import (
 	"strconv"
 
-	"github.com/jinzhu/gorm"
+	"github.com/PolarPanda611/gorm"
 )
 
 // RetriveHandler : List method
