@@ -3,6 +3,7 @@ package trinity
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"reflect"
 	"strconv"
 
@@ -30,11 +31,13 @@ func PatchHandler(r *PatchMixin) {
 
 // DefaultPatchCallback : PATCH method
 func DefaultPatchCallback(r *ViewSetRunTime) {
-
-	buf := make([]byte, 1024)
-	n, _ := r.Gcontext.Request.Body.Read(buf)
+	respBytes, err := ioutil.ReadAll(r.Gcontext.Request.Body)
+	if err != nil {
+		r.HandleResponse(400, nil, err, ErrResolveDataFailed)
+		return
+	}
 	requestbodyMap := make(map[string]interface{})
-	if err := json.Unmarshal(buf[0:n], &requestbodyMap); err != nil {
+	if err := json.Unmarshal(respBytes, &requestbodyMap); err != nil {
 		r.HandleResponse(400, nil, err, ErrResolveDataFailed)
 		return
 	}
@@ -71,6 +74,7 @@ func DefaultPatchCallback(r *ViewSetRunTime) {
 		userID := r.Gcontext.GetInt64("UserID")
 		for k, v := range requestbodyMap {
 			oldValue := oldDataMap[k]
+			fmt.Println(fmt.Sprintf("key: %v oldvaluetype : %v oldvalue: %v , newvaluetype : %v newvalue: %v  ", k, reflect.ValueOf(oldValue).Kind(), oldValue, reflect.ValueOf(v).Kind(), fmt.Sprint(reflect.ValueOf(v))))
 			newValue := fmt.Sprint(reflect.ValueOf(v))
 			if oldValue == newValue {
 				continue

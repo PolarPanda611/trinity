@@ -6,9 +6,9 @@ import (
 
 //Model common type
 type Model struct {
-	ID           int64      `json:"key,string"  gorm:"primary_key;AUTO_INCREMENT:false"`
-	CreatedTime  *time.Time `json:"created_time"`
-	CreateUser   *User      `json:"create_user"`
+	ID           int64      `json:"key,string"  gorm:"primary_key;AUTO_INCREMENT:false" mapstructure:"key"`
+	CreatedTime  *time.Time `json:"created_time" `
+	CreateUser   *User      `json:"create_user" `
 	CreateUserID int64      `json:"create_user_id,string" `
 	UpdatedTime  *time.Time `json:"updated_time"`
 	UpdateUser   *User      `json:"update_user"`
