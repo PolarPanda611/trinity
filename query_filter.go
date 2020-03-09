@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jinzhu/gorm"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 var spiltValue = "__"
@@ -219,14 +219,23 @@ func FilterBySearch(c *gin.Context, SearchingByList []string) func(db *gorm.DB) 
 		//Searching Section : keywords : Searchby
 		SearchValue := c.Query("SearchBy")
 		if len(SearchValue) != 0 {
-			for i, searchField := range SearchingByList {
+			var queryString string
+			ilikeFormatter := " \"%v\" ilike ? "
+			orJoinFormatter := " %v or %v "
+			var querySlice []string
+			var queryValueSlice []interface{}
+			for _, v := range SearchingByList {
+				querySlice = append(querySlice, fmt.Sprintf(ilikeFormatter, gorm.ToColumnName(v)))
+			}
+			for i, v := range querySlice {
+				queryValueSlice = append(queryValueSlice, "%"+SearchValue+"%")
 				if i == 0 {
-					db = db.Where("\""+searchField+"\""+" ilike ? ", "%"+SearchValue+"%")
+					queryString = v
 					continue
 				}
-				db = db.Or("\""+searchField+"\""+" ilike ? ", "%"+SearchValue+"%")
-
+				queryString = fmt.Sprintf(orJoinFormatter, queryString, v)
 			}
+			db = db.Where(queryString, queryValueSlice...)
 		}
 		return db
 	}
