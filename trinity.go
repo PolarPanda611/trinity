@@ -1,16 +1,27 @@
 package trinity
 
 import (
+	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"io/ioutil"
+	"log"
+	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/bluele/gcache"
 	"github.com/gin-gonic/gin"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/jinzhu/gorm"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 var (
@@ -30,14 +41,24 @@ func init() {
 type Trinity struct {
 	mu             sync.RWMutex
 	runMode        string
-	router         *gin.Engine
-	setting        *Setting
-	db             *gorm.DB
-	vCfg           *ViewSetCfg
 	rootpath       string
 	configFilePath string
-	logger         Logger
-	cache          gcache.Cache
+
+	// COMMON
+	ctx              context.Context
+	setting          *Setting
+	customizeSetting CustomizeSetting
+	db               *gorm.DB
+	vCfg             *ViewSetCfg
+	logger           Logger
+	cache            gcache.Cache
+	serviceMesh      ServiceMesh
+
+	// GRPC
+	gServer *grpc.Server
+
+	// HTTP
+	router *gin.Engine
 }
 
 func (t *Trinity) initDefaultValue() {
@@ -76,18 +97,49 @@ func SetRunMode(runmode string) {
 
 // New app
 // initial global trinity object
-func New(customizeSettingSlice ...CustomizeSetting) *Trinity {
+func New(ctx context.Context, customizeSetting ...CustomizeSetting) *Trinity {
 	t := &Trinity{
 		runMode:        runMode,
 		rootpath:       rootPath,
 		configFilePath: configFilePath,
+		ctx:            ctx,
 	}
 	t.mu.Lock()
-	t.loadSetting(customizeSettingSlice...)
+	t.setting = newSetting(t.runMode, t.configFilePath).GetSetting()
+	t.loadCustomizeSetting(customizeSetting...)
 	t.initLogger()
 	t.InitDatabase()
-	t.initRouter()
-	t.initViewSetCfg()
+
+	switch t.setting.Webapp.Type {
+	case "HTTP":
+		t.initRouter()
+		t.initViewSetCfg()
+		break
+	case "GRPC":
+		t.initGRPCServer()
+		break
+	default:
+		log.Fatal("wrong app type")
+		break
+	}
+
+	if t.setting.ServiceMesh.AutoRegister {
+		c, err := NewConsulRegister(
+			t.setting.GetServiceMeshAddress(),
+			t.setting.GetServiceMeshPort(),
+			t.setting.GetProjectName(),
+			t.setting.GetWebAppAddress(),
+			t.setting.GetWebAppPort(),
+			t.setting.GetTags(),
+			t.setting.GetDeregisterAfterCritical(),
+			t.setting.GetHealthCheckInterval(),
+		)
+		if err != nil {
+			log.Fatal("get service mesh client err")
+		}
+		t.serviceMesh = c
+	}
+
 	t.initCache()
 	t.initDefaultValue()
 	t.mu.Unlock()
@@ -98,7 +150,7 @@ func New(customizeSettingSlice ...CustomizeSetting) *Trinity {
 func (t *Trinity) Reload(runMode string) {
 	t.mu.RLock()
 	t.runMode = runMode
-	t.loadSetting()
+	t.setting = newSetting(t.runMode, t.configFilePath).GetSetting()
 	t.initLogger()
 	t.InitDatabase()
 	t.initRouter()
@@ -109,7 +161,7 @@ func (t *Trinity) Reload(runMode string) {
 
 // reloadTrinity for reload some config
 func (t *Trinity) reloadTrinity() {
-	t.loadSetting()
+	t.setting = newSetting(t.runMode, t.configFilePath).GetSetting()
 	t.initLogger()
 	t.InitDatabase()
 	t.initRouter()
@@ -134,11 +186,74 @@ func (t *Trinity) SetVCfg(newVCfg *ViewSetCfg) *Trinity {
 	return t
 }
 
-// Serve http
-func (t *Trinity) Serve() error {
+func (t *Trinity) initGRPCServer() {
+
+	cert, err := tls.LoadX509KeyPair("/Users/daniel/Documents/workspace/SolutionDelivery/conf/server/server.pem", "/Users/daniel/Documents/workspace/SolutionDelivery/conf/server/server.key")
+	if err != nil {
+		log.Fatalf("tls.LoadX509KeyPair err: %v", err)
+	}
+	certPool := x509.NewCertPool()
+	ca, err := ioutil.ReadFile("/Users/daniel/Documents/workspace/SolutionDelivery/conf/ca.pem")
+	if err != nil {
+		log.Fatalf("ioutil.ReadFile err: %v", err)
+	}
+	if ok := certPool.AppendCertsFromPEM(ca); !ok {
+		log.Fatalf("certPool.AppendCertsFromPEM err")
+	}
+	c := credentials.NewTLS(&tls.Config{
+		Certificates: []tls.Certificate{cert},
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		ClientCAs:    certPool,
+	})
+	opts := []grpc.ServerOption{
+		grpc.Creds(c),
+		grpc_middleware.WithUnaryServerChain(
+			RecoveryInterceptor,
+			LoggingInterceptor,
+		),
+	}
+	t.gServer = grpc.NewServer(opts...)
+
+}
+func (t *Trinity) GetGRPCServer() *grpc.Server {
+	t.mu.RLock()
+	defer t.mu.RUnlock()
+	return t.gServer
+}
+
+// ServeGRPC serve GRPC
+func (t *Trinity) ServeGRPC() {
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%v", t.setting.GetWebAppPort()))
+	if err != nil {
+		log.Fatalf("tcp port : %v  listen err: %v", t.setting.GetWebAppPort(), err)
+	}
+	errors := make(chan error)
+	go func() {
+
+		if err := t.serviceMesh.RegService(); err != nil {
+			errors <- err
+		}
+		// logger.Logger.Log("transport", "GRPC", "address", port, "msg", "listening")
+		errors <- t.gServer.Serve(lis)
+	}()
+
+	go func() {
+		c := make(chan os.Signal)
+		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
+		errors <- fmt.Errorf("%s", <-c)
+	}()
+
+	// logger.Logger.Log("terminated", <-errors)
+	fmt.Println(<-errors)
+	t.serviceMesh.DeRegService()
+
+}
+
+// ServeHTTP serve HTTP
+func (t *Trinity) ServeHTTP() {
 	defer t.Close()
 	s := &http.Server{
-		Addr:              ":" + t.setting.Webapp.Port,
+		Addr:              fmt.Sprintf(":%v", t.setting.Webapp.Port),
 		Handler:           t.router,
 		ReadTimeout:       time.Duration(t.setting.Webapp.ReadTimeoutSecond) * time.Second,
 		ReadHeaderTimeout: time.Duration(t.setting.Webapp.ReadHeaderTimeoutSecond) * time.Second,
@@ -147,7 +262,23 @@ func (t *Trinity) Serve() error {
 		MaxHeaderBytes:    t.setting.Webapp.MaxHeaderBytes,
 	}
 	t.logger.Print(fmt.Sprintf("[info] %v  start http server listening : %v, version : %v", GetCurrentTimeString(time.RFC3339), t.setting.Webapp.Port, t.setting.Version))
-	return s.ListenAndServe()
+	s.ListenAndServe()
+	return
+}
+
+// Serve http
+func (t *Trinity) Serve() {
+	switch t.setting.GetWebAppType() {
+	case "HTTP":
+		t.ServeHTTP()
+		break
+	case "GRPC":
+		t.ServeGRPC()
+		break
+	default:
+		log.Fatal("Unsupported Web method")
+		break
+	}
 }
 
 // Close http

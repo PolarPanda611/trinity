@@ -37,7 +37,11 @@ func (l *defaultViewRuntimeLogger) Print(v ...interface{}) {
 
 // InitLogger initial logger
 func (t *Trinity) initLogger() {
-	gin.SetMode(t.setting.Log.GinMode)
+	if t.setting.Runtime.Debug {
+		gin.SetMode("debug")
+	} else {
+		gin.SetMode("release")
+	}
 	runmode := gin.Mode()
 	if runmode == "release" {
 		if !CheckFileIsExist(t.setting.Log.LogRootPath) {

@@ -1,9 +1,25 @@
 package trinity
 
 import (
+	"sync"
+
 	"github.com/PolarPanda611/reflections"
 	"github.com/jinzhu/configor"
 )
+
+// ISetting setting interface
+type ISetting interface {
+	GetSetting() *Setting
+	GetProjectName() string
+	GetTags() []string
+	GetWebAppType() string
+	GetWebAppAddress() string
+	GetWebAppPort() int
+	GetServiceMeshAddress() string
+	GetServiceMeshPort() int
+	GetDeregisterAfterCritical() int
+	GetHealthCheckInterval() int
+}
 
 // CustomizeSetting for customize setting
 type CustomizeSetting interface {
@@ -12,8 +28,10 @@ type CustomizeSetting interface {
 
 // Setting : for trinity setting
 type Setting struct {
-	Project string `yaml:"project"`
-	Version string `yaml:"version"`
+	mu      sync.RWMutex
+	Project string   `yaml:"project"`
+	Version string   `yaml:"version"`
+	Tags    []string `yaml:"tags"`
 	Runtime struct {
 		Debug bool `yaml:"debug"`
 	}
@@ -37,7 +55,10 @@ type Setting struct {
 		}
 	}
 	Webapp struct {
-		Port string `yaml:"port"`
+		// Type support GRPC HTTP
+		Type    string `yaml:"type"`
+		Address string `yaml:"address"`
+		Port    int    `yaml:"port"`
 		// ReadTimeout is the maximum duration for reading the entire
 		// request, including the body.
 		//
@@ -87,14 +108,13 @@ type Setting struct {
 		BaseURL string `yaml:"baseurl"`
 	}
 	Log struct {
-		GinMode     string `yaml:"ginmode"`     //release   log=>log file , debug, test : log=>console
 		LogRootPath string `yaml:"logrootpath"` //   /var/log/mold
 		LogName     string `yaml:"logname"`     //  app.log
 	}
 	Cache struct {
 		Redis struct {
 			Host        string
-			Port        string
+			Port        int
 			Password    string
 			Maxidle     int
 			Maxactive   int
@@ -118,6 +138,64 @@ type Setting struct {
 		DbMaxIdleConn int
 		DbMaxOpenConn int
 	}
+	ServiceMesh struct {
+		Address                 string
+		Port                    int
+		DeregisterAfterCritical int  `yaml:"deregister_after_critical"` //second
+		HealthCheckInterval     int  `yaml:"health_check_interval"`     //second
+		AutoRegister            bool `yaml:"auto_register"`
+	}
+}
+
+// GetSetting get setting
+func (s *Setting) GetSetting() *Setting {
+	return s
+}
+
+// GetDeregisterAfterCritical deregister service after critical second
+func (s *Setting) GetDeregisterAfterCritical() int {
+	return s.ServiceMesh.DeregisterAfterCritical
+}
+
+// GetHealthCheckInterval health check interval
+func (s *Setting) GetHealthCheckInterval() int {
+	return s.ServiceMesh.HealthCheckInterval
+
+}
+
+//GetTags get project tags
+func (s *Setting) GetTags() []string {
+	return s.Tags
+}
+
+// GetProjectName get project name
+func (s *Setting) GetProjectName() string {
+	return s.Project
+}
+
+// GetWebAppType get web app type
+func (s *Setting) GetWebAppType() string {
+	return s.Webapp.Type
+}
+
+// GetWebAppAddress get web service  ip address
+func (s *Setting) GetWebAppAddress() string {
+	return s.Webapp.Address
+}
+
+// GetWebAppPort get web service port
+func (s *Setting) GetWebAppPort() int {
+	return s.Webapp.Port
+}
+
+// GetServiceMeshAddress get service mesh address
+func (s *Setting) GetServiceMeshAddress() string {
+	return s.ServiceMesh.Address
+}
+
+// GetServiceMeshPort get service mesh port
+func (s *Setting) GetServiceMeshPort() int {
+	return s.ServiceMesh.Port
 }
 
 // GlobalSetting : for trinity global setting
@@ -128,27 +206,37 @@ type GlobalSetting struct {
 	Master  Setting
 }
 
-// loadSetting used for load trinity config file by default and customize setting if necessery
-func (t *Trinity) loadSetting(customizeSettingSlice ...CustomizeSetting) {
+func newSetting(runMode string, configFilePath string) ISetting {
+	s := GlobalSetting{}
+	s.loadConfigFile(configFilePath)
+	return s.loadSetting(runMode)
+}
 
-	// load global setting for trinity
-	g := GlobalSetting{}
-	err := configor.Load(&g, t.configFilePath)
+// loadConfigFile load config file
+func (s *GlobalSetting) loadConfigFile(configFilePath string) {
+	err := configor.Load(s, configFilePath)
 	if err != nil {
 		LoadConfigError(err)
 	}
-	currentSettingInterface, err := reflections.GetField(g, t.runMode)
+}
+
+// loadSetting load config file
+func (s *GlobalSetting) loadSetting(runMode string) ISetting {
+	currentSettingInterface, err := reflections.GetField(s, runMode)
 	if err != nil {
-		WrongRunMode(t.runMode)
+		WrongRunMode(runMode)
 	}
 	currentSetting, _ := currentSettingInterface.(Setting)
-	t.setting = &currentSetting
+	return &currentSetting
+}
+
+// loadSetting used for load trinity config file by default and customize setting if necessery
+func (t *Trinity) loadCustomizeSetting(customizeSettingSlice ...CustomizeSetting) {
 
 	// load customize setting for application
 	for _, v := range customizeSettingSlice {
 		v.Load(t.runMode, t.configFilePath)
 	}
-
 }
 
 // GetConfigFilePath  get rootpath
