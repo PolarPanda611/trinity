@@ -215,6 +215,8 @@ func (t *Trinity) initGRPCServer() {
 	t.gServer = grpc.NewServer(opts...)
 
 }
+
+// GetGRPCServer get grpc server instance
 func (t *Trinity) GetGRPCServer() *grpc.Server {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
