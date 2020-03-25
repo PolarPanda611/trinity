@@ -9,6 +9,7 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-contrib/cors v1.3.0
 	github.com/gin-gonic/gin v1.5.0
+	github.com/go-kit/kit v0.9.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.0
 	github.com/hashicorp/consul/api v1.4.0
 	github.com/jinzhu/configor v1.1.1
@@ -19,6 +20,7 @@ require (
 	github.com/nats-io/nats-server/v2 v2.1.4
 	github.com/oleiade/reflections v1.0.0 // indirect
 	github.com/satori/go.uuid v1.2.0
+	github.com/sirupsen/logrus v1.5.0
 	github.com/stretchr/testify v1.4.0
 	github.com/swaggo/gin-swagger v1.2.0
 	google.golang.org/grpc v1.19.0

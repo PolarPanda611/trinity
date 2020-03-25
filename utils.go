@@ -1,6 +1,8 @@
 package trinity
 
 import (
+	"context"
+	"fmt"
 	"net"
 	"os"
 	"reflect"
@@ -12,6 +14,7 @@ import (
 	"github.com/bwmarrin/snowflake"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
+	"google.golang.org/grpc/metadata"
 )
 
 // RFC3339FullDate for rfc full date
@@ -183,4 +186,24 @@ func GetFreePort() (int, error) {
 	}
 	defer l.Close()
 	return l.Addr().(*net.TCPAddr).Port, nil
+}
+
+// GetServiceName get service name which will register to service mesh
+func GetServiceName(projectName string, projectVersion string) string {
+	return fmt.Sprintf("grpc.health.v1.%v-%v", projectName, projectVersion)
+}
+
+// GetServiceID get service name which will register to service mesh
+func GetServiceID(projectName string, projectVersion string, ServiceIP string, ServicePort int) string {
+	ServiceName := GetServiceName(projectName, projectVersion)
+	return fmt.Sprintf("%v-%v-%v", ServiceName, ServiceIP, ServicePort)
+}
+
+// GetLogFromMetaData get log from metadata
+func GetLogFromMetaData(ctx context.Context) (method string, traceID string, userName string) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	method = md["method"][0]
+	traceID = md["trace_id"][0]
+	userName = md["current_user"][0]
+	return method, traceID, userName
 }

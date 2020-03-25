@@ -18,7 +18,8 @@ type ServiceMeshConsulImpl struct {
 	// config
 	ConsulAddress                  string // consul address
 	ConsulPort                     int
-	ServiceName                    string // service name
+	ProjectName                    string
+	ProjectVersion                 string
 	ServiceIP                      string
 	Tags                           []string // consul tags
 	ServicePort                    int      //service port
@@ -30,11 +31,12 @@ type ServiceMeshConsulImpl struct {
 }
 
 // NewConsulRegister New consul register
-func NewConsulRegister(consulAddress string, consulPort int, serviceName string, serviceIP string, servicePort int, Tags []string, deregisterSecondAfterCritical int, interval int) (ServiceMesh, error) {
+func NewConsulRegister(consulAddress string, consulPort int, projectName string, projectVersion string, serviceIP string, servicePort int, Tags []string, deregisterSecondAfterCritical int, interval int) (ServiceMesh, error) {
 	c := &ServiceMeshConsulImpl{
 		ConsulAddress:                  consulAddress, //localhost:8500
 		ConsulPort:                     consulPort,
-		ServiceName:                    serviceName,
+		ProjectName:                    projectName,
+		ProjectVersion:                 projectVersion,
 		ServiceIP:                      serviceIP,
 		ServicePort:                    servicePort,
 		Tags:                           Tags,
@@ -69,8 +71,8 @@ func (c *ServiceMeshConsulImpl) getConsulClient() error {
 // RegService  consul register service
 func (c *ServiceMeshConsulImpl) RegService() error {
 	reg := consulapi.AgentServiceRegistration{
-		ID:      fmt.Sprintf("%v-%v-%v", c.ServiceName, c.ServiceIP, c.ServicePort),
-		Name:    fmt.Sprintf("grpc.health.v1.%v", c.ServiceName),
+		ID:      GetServiceID(c.ProjectName, c.ProjectVersion, c.ServiceIP, c.ServicePort),
+		Name:    GetServiceName(c.ProjectName, c.ProjectVersion),
 		Tags:    c.Tags,
 		Port:    c.ServicePort,
 		Address: c.ServiceIP,
@@ -94,7 +96,7 @@ func (c *ServiceMeshConsulImpl) RegService() error {
 
 // DeRegService  deregister service
 func (c *ServiceMeshConsulImpl) DeRegService() error {
-	if err := c.consulClient.Agent().ServiceDeregister(fmt.Sprintf("%v-%v-%v", c.ServiceName, c.ServiceIP, c.ServicePort)); err != nil {
+	if err := c.consulClient.Agent().ServiceDeregister(GetServiceID(c.ProjectName, c.ProjectVersion, c.ServiceIP, c.ServicePort)); err != nil {
 		return err
 	}
 	fmt.Println("service deregister successfully ")

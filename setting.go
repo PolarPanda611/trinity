@@ -9,6 +9,7 @@ import (
 
 // ISetting setting interface
 type ISetting interface {
+	GetDebug() bool
 	GetSetting() *Setting
 	GetProjectName() string
 	GetTags() []string
@@ -19,6 +20,14 @@ type ISetting interface {
 	GetServiceMeshPort() int
 	GetDeregisterAfterCritical() int
 	GetHealthCheckInterval() int
+	GetCAPemFile() string
+	GetServerPemFile() string
+	GetServerKeyFile() string
+	GetClientPemFile() string
+	GetClientKeyFile() string
+	GetProjectVersion() string
+	GetLogRootPath() string
+	GetLogName() string
 }
 
 // CustomizeSetting for customize setting
@@ -52,6 +61,13 @@ type Setting struct {
 			ExposeHeaders    []string `yaml:"exposeheaders"`
 			AllowCredentials bool     `yaml:"allowcredentials"`
 			MaxAgeHour       int      `yaml:"maxagehour"`
+		}
+		TLS struct {
+			CAPemFile     string `yaml:"ca_pem_file"`
+			ServerPemFile string `yaml:"server_pem_file"`
+			ServerKeyFile string `yaml:"server_key_file"`
+			ClientPemFile string `yaml:"client_pem_file"`
+			ClientKeyFile string `yaml:"client_key_file"`
 		}
 	}
 	Webapp struct {
@@ -147,9 +163,49 @@ type Setting struct {
 	}
 }
 
+// GetLogRootPath get log root path
+func (s *Setting) GetLogRootPath() string {
+	return s.Log.LogRootPath
+}
+
+// GetLogName get log name
+func (s *Setting) GetLogName() string {
+	return s.Log.LogName
+}
+
+// GetDebug get debug
+func (s *Setting) GetDebug() bool {
+	return s.Runtime.Debug
+}
+
 // GetSetting get setting
 func (s *Setting) GetSetting() *Setting {
 	return s
+}
+
+//GetCAPemFile get ca pem file
+func (s *Setting) GetCAPemFile() string {
+	return s.Security.TLS.CAPemFile
+}
+
+//GetServerPemFile get server pem file
+func (s *Setting) GetServerPemFile() string {
+	return s.Security.TLS.ServerPemFile
+}
+
+//GetServerKeyFile get server key file
+func (s *Setting) GetServerKeyFile() string {
+	return s.Security.TLS.ServerKeyFile
+}
+
+//GetClientPemFile get client pem file
+func (s *Setting) GetClientPemFile() string {
+	return s.Security.TLS.ClientPemFile
+}
+
+//GetClientKeyFile get client key file
+func (s *Setting) GetClientKeyFile() string {
+	return s.Security.TLS.ClientKeyFile
 }
 
 // GetDeregisterAfterCritical deregister service after critical second
@@ -171,6 +227,11 @@ func (s *Setting) GetTags() []string {
 // GetProjectName get project name
 func (s *Setting) GetProjectName() string {
 	return s.Project
+}
+
+// GetProjectVersion get project name
+func (s *Setting) GetProjectVersion() string {
+	return s.Version
 }
 
 // GetWebAppType get web app type

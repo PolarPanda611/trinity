@@ -20,6 +20,12 @@ local:
       ExposeHeaders: ["Content-Length"]
       allowcredentials: True
       maxagehour: 12
+    tls:
+      ca_pem_file: /Users/daniel/Documents/workspace/SolutionDelivery/conf/ca.pem
+      server_pem_file: /Users/daniel/Documents/workspace/SolutionDelivery/conf/server/server.pem
+      server_key_file: /Users/daniel/Documents/workspace/SolutionDelivery/conf/server/server.key
+      client_pem_file: xx
+      client_key_file: xx
   webapp:
     type: HTTP
     address: 127.0.0.1

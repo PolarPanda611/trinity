@@ -56,6 +56,7 @@ type Trinity struct {
 
 	// GRPC
 	gServer *grpc.Server
+	context *Context
 
 	// HTTP
 	router *gin.Engine
@@ -103,11 +104,13 @@ func New(ctx context.Context, customizeSetting ...CustomizeSetting) *Trinity {
 		rootpath:       rootPath,
 		configFilePath: configFilePath,
 		ctx:            ctx,
+		context:        &Context{},
 	}
 	t.mu.Lock()
 	t.setting = newSetting(t.runMode, t.configFilePath).GetSetting()
 	t.loadCustomizeSetting(customizeSetting...)
-	t.initLogger()
+	t.logger = initLogger(t.setting)
+	t.context.logger = initLogger(t.setting)
 	t.InitDatabase()
 
 	switch t.setting.Webapp.Type {
@@ -128,6 +131,7 @@ func New(ctx context.Context, customizeSetting ...CustomizeSetting) *Trinity {
 			t.setting.GetServiceMeshAddress(),
 			t.setting.GetServiceMeshPort(),
 			t.setting.GetProjectName(),
+			t.setting.GetProjectVersion(),
 			t.setting.GetWebAppAddress(),
 			t.setting.GetWebAppPort(),
 			t.setting.GetTags(),
@@ -151,7 +155,8 @@ func (t *Trinity) Reload(runMode string) {
 	t.mu.RLock()
 	t.runMode = runMode
 	t.setting = newSetting(t.runMode, t.configFilePath).GetSetting()
-	t.initLogger()
+	t.logger = initLogger(t.setting)
+	t.context.logger = initLogger(t.setting)
 	t.InitDatabase()
 	t.initRouter()
 	t.initViewSetCfg()
@@ -162,7 +167,8 @@ func (t *Trinity) Reload(runMode string) {
 // reloadTrinity for reload some config
 func (t *Trinity) reloadTrinity() {
 	t.setting = newSetting(t.runMode, t.configFilePath).GetSetting()
-	t.initLogger()
+	t.logger = initLogger(t.setting)
+	t.context.logger = initLogger(t.setting)
 	t.InitDatabase()
 	t.initRouter()
 	t.initViewSetCfg()
@@ -173,6 +179,14 @@ func (t *Trinity) reloadTrinity() {
 func (t *Trinity) GetVCfg() *ViewSetCfg {
 	t.mu.RLock()
 	v := t.vCfg
+	t.mu.RUnlock()
+	return v
+}
+
+// NewContext  get context
+func (t *Trinity) NewContext() *Context {
+	t.mu.RLock()
+	v := t.context.clone()
 	t.mu.RUnlock()
 	return v
 }
@@ -188,12 +202,12 @@ func (t *Trinity) SetVCfg(newVCfg *ViewSetCfg) *Trinity {
 
 func (t *Trinity) initGRPCServer() {
 
-	cert, err := tls.LoadX509KeyPair("/Users/daniel/Documents/workspace/SolutionDelivery/conf/server/server.pem", "/Users/daniel/Documents/workspace/SolutionDelivery/conf/server/server.key")
+	cert, err := tls.LoadX509KeyPair(t.setting.GetServerPemFile(), t.setting.GetServerKeyFile())
 	if err != nil {
 		log.Fatalf("tls.LoadX509KeyPair err: %v", err)
 	}
 	certPool := x509.NewCertPool()
-	ca, err := ioutil.ReadFile("/Users/daniel/Documents/workspace/SolutionDelivery/conf/ca.pem")
+	ca, err := ioutil.ReadFile(t.setting.GetCAPemFile())
 	if err != nil {
 		log.Fatalf("ioutil.ReadFile err: %v", err)
 	}
@@ -208,8 +222,8 @@ func (t *Trinity) initGRPCServer() {
 	opts := []grpc.ServerOption{
 		grpc.Creds(c),
 		grpc_middleware.WithUnaryServerChain(
-			RecoveryInterceptor,
-			LoggingInterceptor,
+			RecoveryInterceptor(t.logger),
+			LoggingInterceptor(t.logger),
 		),
 	}
 	t.gServer = grpc.NewServer(opts...)
