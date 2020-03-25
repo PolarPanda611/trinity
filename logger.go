@@ -12,19 +12,14 @@ import (
 	kitlog "github.com/go-kit/kit/log"
 )
 
-var logger kitlog.Logger
-
 // Logger to record log
 type Logger interface {
-	clone() Logger
 	FormatLogger(method string, traceID string, user string) Logger
 	Print(v ...interface{})
 }
 
 // defaultLogger: default logger
 type defaultLogger struct {
-	Out            io.Writer
-	Logger         kitlog.Logger
 	ProjectName    string
 	ProjectVersion string
 	WebAppAddress  string
@@ -32,17 +27,6 @@ type defaultLogger struct {
 	Method         string
 	TraceID        string
 	User           string
-}
-
-func (l *defaultLogger) clone() Logger {
-	return &defaultLogger{
-		Out:            l.Out,
-		Logger:         kitlog.NewLogfmtLogger(l.Out),
-		ProjectName:    l.ProjectName,
-		ProjectVersion: l.ProjectVersion,
-		WebAppAddress:  l.WebAppAddress,
-		WebAppPort:     l.WebAppPort,
-	}
 }
 
 func (l *defaultLogger) FormatLogger(method string, traceID string, user string) Logger {
@@ -62,34 +46,37 @@ func (l *defaultLogger) FormatLogger(method string, traceID string, user string)
 
 // LogWriter log
 func (l *defaultLogger) Print(v ...interface{}) {
+
 	var logInterface []interface{}
 	logInterface = []interface{}{
-		"ServiceName", GetServiceName(l.ProjectName, l.ProjectVersion),
-		"Time", kitlog.DefaultTimestamp(),
-		"Caller", kitlog.DefaultCaller(),
-		"Method", l.Method,
-		"TraceID", l.TraceID,
-		"User", l.User,
+		"ServiceName=", GetServiceName(l.ProjectName),
+		"Time=", kitlog.DefaultTimestamp(),
+		"Caller=", kitlog.DefaultCaller(),
+		"Method=", l.Method,
+		"TraceID=", l.TraceID,
+		"User=", l.User,
 	}
 	if len(v) > 0 {
 		dblogLevel, _ := v[0].(string)
 		if dblogLevel == "sql" {
-			logInterface = append(logInterface, "DBRunningFile")
+			// fmt.Printf(fmt.Sprintf("logger %p , %v ", l, l.TraceID))
+			logInterface = append(logInterface, "DBRunningFile=")
 			logInterface = append(logInterface, fmt.Sprint(v[1]))
-			logInterface = append(logInterface, "DBRunningTime")
+			logInterface = append(logInterface, "DBRunningTime=")
 			DBRunningTime, _ := v[2].(time.Duration)
 			logInterface = append(logInterface, DBRunningTime)
-			logInterface = append(logInterface, "DBSQL")
+			logInterface = append(logInterface, "DBSQL=")
 			logInterface = append(logInterface, fmt.Sprint(v[3]))
-			logInterface = append(logInterface, "DBParams")
+			logInterface = append(logInterface, "DBParams=")
 			logInterface = append(logInterface, fmt.Sprint(v[4]))
-			logInterface = append(logInterface, "DBEffectedRows")
+			logInterface = append(logInterface, "DBEffectedRows=")
 			logInterface = append(logInterface, fmt.Sprint(v[5]))
 		}
 	}
 	logInterface = append(logInterface, v...)
-	l.Logger.Log(logInterface...)
-	// LogPrint(v...)
+	// l.Logger.Log(logInterface...)
+	// fmt.Fprintln(gin.DefaultWriter, logInterface...)
+	LogPrint(logInterface...)
 }
 
 // defaultViewRuntimeLogger: default logger for request
@@ -97,9 +84,6 @@ type defaultViewRuntimeLogger struct {
 	ViewRuntime *ViewSetRunTime
 }
 
-func (l *defaultViewRuntimeLogger) clone() Logger {
-	return l
-}
 func (l *defaultViewRuntimeLogger) FormatLogger(method string, traceID string, user string) Logger {
 	return l
 }
@@ -145,8 +129,6 @@ func initLogger(setting ISetting) Logger {
 		gin.DefaultWriter = io.MultiWriter(os.Stderr)
 	}
 	return &defaultLogger{
-		Out:            kitlog.NewSyncWriter(gin.DefaultWriter),
-		Logger:         kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(gin.DefaultWriter)),
 		ProjectName:    setting.GetProjectName(),
 		ProjectVersion: setting.GetProjectVersion(),
 		WebAppAddress:  setting.GetWebAppAddress(),

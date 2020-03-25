@@ -189,21 +189,25 @@ func GetFreePort() (int, error) {
 }
 
 // GetServiceName get service name which will register to service mesh
-func GetServiceName(projectName string, projectVersion string) string {
-	return fmt.Sprintf("grpc.health.v1.%v-%v", projectName, projectVersion)
+func GetServiceName(projectName string) string {
+	return fmt.Sprintf("grpc.health.v1.%v", projectName)
 }
 
 // GetServiceID get service name which will register to service mesh
 func GetServiceID(projectName string, projectVersion string, ServiceIP string, ServicePort int) string {
-	ServiceName := GetServiceName(projectName, projectVersion)
-	return fmt.Sprintf("%v-%v-%v", ServiceName, ServiceIP, ServicePort)
+	ServiceName := GetServiceName(projectName)
+	return fmt.Sprintf("%v-%v-%v-%v", ServiceName, projectVersion, ServiceIP, ServicePort)
 }
 
 // GetLogFromMetaData get log from metadata
 func GetLogFromMetaData(ctx context.Context) (method string, traceID string, userName string) {
-	md, _ := metadata.FromIncomingContext(ctx)
-	method = md["method"][0]
-	traceID = md["trace_id"][0]
-	userName = md["current_user"][0]
-	return method, traceID, userName
+	md, ok := metadata.FromIncomingContext(ctx)
+	if ok {
+		method = md["method"][0]
+		traceID = md["trace_id"][0]
+		userName = md["current_user"][0]
+		return method, traceID, userName
+	}
+	return "", "", ""
+
 }

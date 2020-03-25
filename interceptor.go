@@ -35,8 +35,17 @@ import (
 // LoggingInterceptor record log
 func LoggingInterceptor(log Logger) func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		if info.FullMethod == "/grpc.health.v1.Health/Check" {
+			return handler(ctx, req)
+		}
 		md, _ := metadata.FromIncomingContext(ctx)
 		md.Append("method", info.FullMethod)
+		if _, ok := md["trace_id"]; !ok {
+			md.Append("trace_id", "")
+		}
+		if _, ok := md["current_user"]; !ok {
+			md.Append("current_user", "")
+		}
 		resp, err := handler(ctx, req)
 		log.FormatLogger(
 			info.FullMethod,
@@ -57,6 +66,22 @@ func RecoveryInterceptor(log Logger) func(ctx context.Context, req interface{}, 
 				log.Print("gRPC method: ", info.FullMethod, "request :", fmt.Sprintf("%v", req), "Panic err :", fmt.Sprintf("%v", err))
 			}
 		}()
+		return handler(ctx, req)
+	}
+}
+
+// UserAuthInterceptor record log
+func UserAuthInterceptor(log Logger) func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		if info.FullMethod == "/grpc.health.v1.Health/Check" {
+			return handler(ctx, req)
+		}
+
+		md, _ := metadata.FromIncomingContext(ctx)
+		currentUser, ok := md["current_user"]
+		if !ok || currentUser[0] == "" {
+			return nil, status.Error(codes.Unauthenticated, "current user not found")
+		}
 		return handler(ctx, req)
 	}
 }

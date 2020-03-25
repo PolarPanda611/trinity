@@ -10,6 +10,7 @@ import (
 // ISetting setting interface
 type ISetting interface {
 	GetDebug() bool
+	GetTLSEnabled() bool
 	GetSetting() *Setting
 	GetProjectName() string
 	GetTags() []string
@@ -28,6 +29,7 @@ type ISetting interface {
 	GetProjectVersion() string
 	GetLogRootPath() string
 	GetLogName() string
+	GetServiceMeshType() string
 }
 
 // CustomizeSetting for customize setting
@@ -63,6 +65,7 @@ type Setting struct {
 			MaxAgeHour       int      `yaml:"maxagehour"`
 		}
 		TLS struct {
+			Enabled       bool   `yaml:"enabled"`
 			CAPemFile     string `yaml:"ca_pem_file"`
 			ServerPemFile string `yaml:"server_pem_file"`
 			ServerKeyFile string `yaml:"server_key_file"`
@@ -155,6 +158,7 @@ type Setting struct {
 		DbMaxOpenConn int
 	}
 	ServiceMesh struct {
+		Type                    string // etcd oor consul
 		Address                 string
 		Port                    int
 		DeregisterAfterCritical int  `yaml:"deregister_after_critical"` //second
@@ -166,6 +170,16 @@ type Setting struct {
 // GetLogRootPath get log root path
 func (s *Setting) GetLogRootPath() string {
 	return s.Log.LogRootPath
+}
+
+//GetServiceMeshType get s m type
+func (s *Setting) GetServiceMeshType() string {
+	return s.ServiceMesh.Type
+}
+
+// GetTLSEnabled get tls enabled
+func (s *Setting) GetTLSEnabled() bool {
+	return s.Security.TLS.Enabled
 }
 
 // GetLogName get log name

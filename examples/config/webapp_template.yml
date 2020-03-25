@@ -21,6 +21,7 @@ local:
       allowcredentials: True
       maxagehour: 12
     tls:
+      enabled: False
       ca_pem_file: /Users/daniel/Documents/workspace/SolutionDelivery/conf/ca.pem
       server_pem_file: /Users/daniel/Documents/workspace/SolutionDelivery/conf/server/server.pem
       server_key_file: /Users/daniel/Documents/workspace/SolutionDelivery/conf/server/server.key
@@ -71,8 +72,9 @@ local:
     dbmaxidleconn: 10
     dbmaxopenconn: 100
   servicemesh:
+    type: etcd
     address: 127.0.0.1
-    port: 8500
+    port: 2379
     deregister_after_critical: 60
     health_check_interval: 10
     auto_register: False

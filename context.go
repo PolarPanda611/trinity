@@ -1,28 +1,26 @@
 package trinity
 
-import "github.com/jinzhu/gorm"
+import (
+	"github.com/jinzhu/gorm"
+)
 
 // Context  context impl
 type Context struct {
-	db     *gorm.DB
-	logger Logger
+	db      *gorm.DB
+	logger  Logger
+	setting ISetting
 }
 
 // GetDB get db instance
-func (c *Context) GetDB() *gorm.DB {
-	return c.db
-}
+func (c *Context) GetDB(method string, traceID string, userName string) *gorm.DB {
 
-// GetLogger get logger instance
-func (c *Context) GetLogger() Logger {
-	return c.logger
-}
-
-// GetLogger get logger instance
-func (c *Context) clone() *Context {
-	cClone := &Context{
-		db:     c.db,
-		logger: c.logger.clone(),
+	logger := &defaultLogger{
+		ProjectName:    c.setting.GetProjectName(),
+		ProjectVersion: c.setting.GetProjectVersion(),
+		WebAppAddress:  c.setting.GetWebAppAddress(),
+		WebAppPort:     c.setting.GetWebAppPort(),
 	}
-	return cClone
+	logger.FormatLogger(method, traceID, userName)
+	c.db.SetLogger(logger)
+	return c.db
 }

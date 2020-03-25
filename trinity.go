@@ -111,6 +111,7 @@ func New(ctx context.Context, customizeSetting ...CustomizeSetting) *Trinity {
 	t.loadCustomizeSetting(customizeSetting...)
 	t.logger = initLogger(t.setting)
 	t.context.logger = initLogger(t.setting)
+	t.context.setting = t.setting
 	t.InitDatabase()
 
 	switch t.setting.Webapp.Type {
@@ -127,21 +128,31 @@ func New(ctx context.Context, customizeSetting ...CustomizeSetting) *Trinity {
 	}
 
 	if t.setting.ServiceMesh.AutoRegister {
-		c, err := NewConsulRegister(
-			t.setting.GetServiceMeshAddress(),
-			t.setting.GetServiceMeshPort(),
-			t.setting.GetProjectName(),
-			t.setting.GetProjectVersion(),
-			t.setting.GetWebAppAddress(),
-			t.setting.GetWebAppPort(),
-			t.setting.GetTags(),
-			t.setting.GetDeregisterAfterCritical(),
-			t.setting.GetHealthCheckInterval(),
-		)
-		if err != nil {
-			log.Fatal("get service mesh client err")
+		switch t.setting.GetServiceMeshType() {
+		case "consul":
+			c, err := NewConsulRegister(
+				t.setting.GetServiceMeshAddress(),
+				t.setting.GetServiceMeshPort(),
+			)
+			if err != nil {
+				log.Fatal("get service mesh client err")
+			}
+			t.serviceMesh = c
+			break
+		case "etcd":
+			c, err := NewEtcdRegister(
+				t.setting.GetServiceMeshAddress(),
+				t.setting.GetServiceMeshPort(),
+			)
+			if err != nil {
+				log.Fatal("get service mesh client err")
+			}
+			t.serviceMesh = c
+			break
+		default:
+			log.Fatal("wrong service mash type")
 		}
-		t.serviceMesh = c
+
 	}
 
 	t.initCache()
@@ -186,7 +197,7 @@ func (t *Trinity) GetVCfg() *ViewSetCfg {
 // NewContext  get context
 func (t *Trinity) NewContext() *Context {
 	t.mu.RLock()
-	v := t.context.clone()
+	v := t.context
 	t.mu.RUnlock()
 	return v
 }
@@ -200,33 +211,53 @@ func (t *Trinity) SetVCfg(newVCfg *ViewSetCfg) *Trinity {
 	return t
 }
 
+// GetLogger  get vcfg
+func (t *Trinity) GetLogger() Logger {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.logger
+
+}
+
 func (t *Trinity) initGRPCServer() {
 
-	cert, err := tls.LoadX509KeyPair(t.setting.GetServerPemFile(), t.setting.GetServerKeyFile())
-	if err != nil {
-		log.Fatalf("tls.LoadX509KeyPair err: %v", err)
+	if t.setting.GetTLSEnabled() {
+		cert, err := tls.LoadX509KeyPair(t.setting.GetServerPemFile(), t.setting.GetServerKeyFile())
+		if err != nil {
+			log.Fatalf("tls.LoadX509KeyPair err: %v", err)
+		}
+		certPool := x509.NewCertPool()
+		ca, err := ioutil.ReadFile(t.setting.GetCAPemFile())
+		if err != nil {
+			log.Fatalf("ioutil.ReadFile err: %v", err)
+		}
+		if ok := certPool.AppendCertsFromPEM(ca); !ok {
+			log.Fatalf("certPool.AppendCertsFromPEM err")
+		}
+		c := credentials.NewTLS(&tls.Config{
+			Certificates: []tls.Certificate{cert},
+			ClientAuth:   tls.RequireAndVerifyClientCert,
+			ClientCAs:    certPool,
+		})
+		opts := []grpc.ServerOption{
+			grpc.Creds(c),
+			grpc_middleware.WithUnaryServerChain(
+				RecoveryInterceptor(t.logger),
+				LoggingInterceptor(t.logger),
+				UserAuthInterceptor(t.logger),
+			),
+		}
+		t.gServer = grpc.NewServer(opts...)
+	} else {
+		opts := []grpc.ServerOption{
+			grpc_middleware.WithUnaryServerChain(
+				RecoveryInterceptor(t.logger),
+				LoggingInterceptor(t.logger),
+				UserAuthInterceptor(t.logger),
+			),
+		}
+		t.gServer = grpc.NewServer(opts...)
 	}
-	certPool := x509.NewCertPool()
-	ca, err := ioutil.ReadFile(t.setting.GetCAPemFile())
-	if err != nil {
-		log.Fatalf("ioutil.ReadFile err: %v", err)
-	}
-	if ok := certPool.AppendCertsFromPEM(ca); !ok {
-		log.Fatalf("certPool.AppendCertsFromPEM err")
-	}
-	c := credentials.NewTLS(&tls.Config{
-		Certificates: []tls.Certificate{cert},
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		ClientCAs:    certPool,
-	})
-	opts := []grpc.ServerOption{
-		grpc.Creds(c),
-		grpc_middleware.WithUnaryServerChain(
-			RecoveryInterceptor(t.logger),
-			LoggingInterceptor(t.logger),
-		),
-	}
-	t.gServer = grpc.NewServer(opts...)
 
 }
 
@@ -246,7 +277,16 @@ func (t *Trinity) ServeGRPC() {
 	errors := make(chan error)
 	go func() {
 
-		if err := t.serviceMesh.RegService(); err != nil {
+		if err := t.serviceMesh.RegService(
+			t.setting.GetProjectName(),
+			t.setting.GetProjectVersion(),
+			t.setting.GetWebAppAddress(),
+			t.setting.GetWebAppPort(),
+			t.setting.GetTags(),
+			t.setting.GetDeregisterAfterCritical(),
+			t.setting.GetHealthCheckInterval(),
+			t.setting.GetTLSEnabled(),
+		); err != nil {
 			errors <- err
 		}
 		// logger.Logger.Log("transport", "GRPC", "address", port, "msg", "listening")
@@ -261,7 +301,12 @@ func (t *Trinity) ServeGRPC() {
 
 	// logger.Logger.Log("terminated", <-errors)
 	fmt.Println(<-errors)
-	t.serviceMesh.DeRegService()
+	t.serviceMesh.DeRegService(
+		t.setting.GetProjectName(),
+		t.setting.GetProjectVersion(),
+		t.setting.GetWebAppAddress(),
+		t.setting.GetWebAppPort(),
+	)
 
 }
 
