@@ -104,7 +104,7 @@ func New(ctx context.Context, customizeSetting ...CustomizeSetting) *Trinity {
 		rootpath:       rootPath,
 		configFilePath: configFilePath,
 		ctx:            ctx,
-		context:        &Context{},
+		context:        &Context{root: true},
 	}
 	t.mu.Lock()
 	t.setting = newSetting(t.runMode, t.configFilePath).GetSetting()

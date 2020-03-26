@@ -30,6 +30,7 @@ type ISetting interface {
 	GetLogRootPath() string
 	GetLogName() string
 	GetServiceMeshType() string
+	GetAtomicRequest() bool
 }
 
 // CustomizeSetting for customize setting
@@ -170,6 +171,11 @@ type Setting struct {
 // GetLogRootPath get log root path
 func (s *Setting) GetLogRootPath() string {
 	return s.Log.LogRootPath
+}
+
+// GetAtomicRequest get automic request is open
+func (s *Setting) GetAtomicRequest() bool {
+	return s.Webapp.AtomicRequest
 }
 
 //GetServiceMeshType get s m type
