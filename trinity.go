@@ -113,6 +113,8 @@ func New(ctx context.Context, customizeSetting ...CustomizeSetting) *Trinity {
 	t.context.logger = initLogger(t.setting)
 	t.context.setting = t.setting
 	t.InitDatabase()
+	t.db.SetLogger(t.logger)
+	t.context.db.SetLogger(t.logger)
 
 	switch t.setting.Webapp.Type {
 	case "HTTP":
@@ -299,8 +301,6 @@ func (t *Trinity) ServeGRPC() {
 		errors <- fmt.Errorf("%s", <-c)
 	}()
 
-	// logger.Logger.Log("terminated", <-errors)
-	fmt.Println(<-errors)
 	t.serviceMesh.DeRegService(
 		t.setting.GetProjectName(),
 		t.setting.GetProjectVersion(),

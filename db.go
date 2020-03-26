@@ -52,7 +52,6 @@ func (t *Trinity) InitDatabase() {
 		log.Fatalf("models.Setup err: %v", err)
 	}
 	db.LogMode(t.setting.Runtime.Debug)
-	db.SetLogger(t.logger)
 	db.SingularTable(true)
 	db.Callback().Create().Replace("gorm:update_time_stamp", updateTimeStampAndUUIDForCreateCallback)
 	db.Callback().Update().Replace("gorm:update_time_stamp", updateTimeStampForUpdateCallback)

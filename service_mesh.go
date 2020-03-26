@@ -81,7 +81,6 @@ func (c *ServiceMeshConsulImpl) RegService(projectName string, projectVersion st
 	if err := c.consulClient.Agent().ServiceRegister(&reg); err != nil {
 		return err
 	}
-	fmt.Println("service register successfully ")
 	return nil
 }
 
@@ -90,7 +89,6 @@ func (c *ServiceMeshConsulImpl) DeRegService(projectName string, projectVersion 
 	if err := c.consulClient.Agent().ServiceDeregister(GetServiceID(projectName, projectVersion, serviceIP, servicePort)); err != nil {
 		return err
 	}
-	fmt.Println("service deregister successfully ")
 	return nil
 }
 
