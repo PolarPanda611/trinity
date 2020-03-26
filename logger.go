@@ -18,6 +18,14 @@ type Logger interface {
 	Print(v ...interface{})
 }
 
+// NilLogger nil logger
+type NilLogger struct{}
+
+// Print nil logger do noothing
+func (l *NilLogger) Print(v ...interface{}) {
+
+}
+
 // defaultLogger: default logger
 type defaultLogger struct {
 	ProjectName    string

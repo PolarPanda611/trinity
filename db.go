@@ -44,6 +44,7 @@ func (t *Trinity) InitDatabase() {
 	}
 	db, err := gorm.Open(t.setting.Database.Type, dbconnection)
 
+	db.SetLogger(&NilLogger{})
 	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
 		return t.setting.Database.TablePrefix + defaultTableName
 	}

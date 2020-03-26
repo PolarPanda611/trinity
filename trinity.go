@@ -276,7 +276,7 @@ func (t *Trinity) ServeGRPC() {
 	if err != nil {
 		log.Fatalf("tcp port : %v  listen err: %v", t.setting.GetWebAppPort(), err)
 	}
-	errors := make(chan error)
+	gErr := make(chan error)
 	go func() {
 
 		if err := t.serviceMesh.RegService(
@@ -289,18 +289,19 @@ func (t *Trinity) ServeGRPC() {
 			t.setting.GetHealthCheckInterval(),
 			t.setting.GetTLSEnabled(),
 		); err != nil {
-			errors <- err
+			gErr <- err
 		}
 		// logger.Logger.Log("transport", "GRPC", "address", port, "msg", "listening")
-		errors <- t.gServer.Serve(lis)
+		t.logger.Print(fmt.Sprintf("[info] %v  start GRPC server listening : %v, version : %v", GetCurrentTimeString(time.RFC3339), t.setting.Webapp.Port, t.setting.Version))
+		gErr <- t.gServer.Serve(lis)
 	}()
 
 	go func() {
 		c := make(chan os.Signal)
 		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
-		errors <- fmt.Errorf("%s", <-c)
+		gErr <- fmt.Errorf("%s", <-c)
 	}()
-
+	t.logger.Print(fmt.Sprintf("[info] %v   GRPC server listening ended : %v, version : %v , %v ", GetCurrentTimeString(time.RFC3339), t.setting.Webapp.Port, t.setting.Version, <-gErr))
 	t.serviceMesh.DeRegService(
 		t.setting.GetProjectName(),
 		t.setting.GetProjectVersion(),
