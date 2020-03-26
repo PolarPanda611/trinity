@@ -30,7 +30,45 @@ type ISetting interface {
 	GetLogRootPath() string
 	GetLogName() string
 	GetServiceMeshType() string
+	GetServiceMeshAutoRegister() bool
 	GetAtomicRequest() bool
+	GetTablePrefix() string
+	GetWebAppMediaURL() string
+	GetWebAppStaticURL() string
+	GetWebAppMediaPath() string
+	GetWebAppStaticPath() string
+	GetCacheSize() int
+	GetCacheTimeout() int
+	GetPageSize() int
+	GetWebAppBaseURL() string
+	GetMigrationPath() string
+	GetJwtVerifyExpireHour() bool
+	GetJwtVerifyIssuer() bool
+	GetJwtIssuer() string
+	GetJwtHeaderPrefix() string
+	GetJwtExpireHour() int
+	GetReadTimeoutSecond() int
+	GetReadHeaderTimeoutSecond() int
+	GetWriteTimeoutSecond() int
+	GetIdleTimeoutSecond() int
+	GetMaxHeaderBytes() int
+	GetSecretKey() string
+	GetAllowOrigins() []string
+	GetAllowMethods() []string
+	GetAllowHeaders() []string
+	GetExposeHeaders() []string
+	GetAllowCredentials() bool
+	GetMaxAgeHour() int
+	GetCorsEnable() bool
+	GetDBHost() string
+	GetDBPort() string
+	GetDBUser() string
+	GetDBPassword() string
+	GetDBName() string
+	GetDBOption() string
+	GetDBType() string
+	GetDbMaxIdleConn() int
+	GetDbMaxOpenConn() int
 }
 
 // CustomizeSetting for customize setting
@@ -168,9 +206,81 @@ type Setting struct {
 	}
 }
 
+func (s *Setting) GetDbMaxIdleConn() int { return s.Database.DbMaxIdleConn }
+func (s *Setting) GetDbMaxOpenConn() int { return s.Database.DbMaxOpenConn }
+func (s *Setting) GetDBHost() string     { return s.Database.Host }
+func (s *Setting) GetDBPort() string     { return s.Database.Port }
+func (s *Setting) GetDBUser() string     { return s.Database.User }
+func (s *Setting) GetDBPassword() string { return s.Database.Password }
+func (s *Setting) GetDBName() string     { return s.Database.Name }
+func (s *Setting) GetDBOption() string   { return s.Database.Option }
+func (s *Setting) GetDBType() string     { return s.Database.Type }
+
+func (s *Setting) GetCorsEnable() bool        { return s.Security.Cors.Enable }
+func (s *Setting) GetMaxAgeHour() int         { return s.Security.Cors.MaxAgeHour }
+func (s *Setting) GetAllowOrigins() []string  { return s.Security.Cors.AllowOrigins }
+func (s *Setting) GetAllowMethods() []string  { return s.Security.Cors.AllowMethods }
+func (s *Setting) GetAllowHeaders() []string  { return s.Security.Cors.AllowHeaders }
+func (s *Setting) GetExposeHeaders() []string { return s.Security.Cors.ExposeHeaders }
+func (s *Setting) GetAllowCredentials() bool {
+	return s.Security.Cors.AllowCredentials
+}
+
+func (s *Setting) GetReadTimeoutSecond() int       { return s.Webapp.ReadTimeoutSecond }
+func (s *Setting) GetReadHeaderTimeoutSecond() int { return s.Webapp.ReadHeaderTimeoutSecond }
+func (s *Setting) GetWriteTimeoutSecond() int      { return s.Webapp.WriteTimeoutSecond }
+func (s *Setting) GetIdleTimeoutSecond() int       { return s.Webapp.IdleTimeoutSecond }
+func (s *Setting) GetMaxHeaderBytes() int          { return s.Webapp.MaxHeaderBytes }
+func (s *Setting) GetSecretKey() string {
+	return s.Security.Authentication.SecretKey
+}
+
+func (s *Setting) GetJwtExpireHour() int {
+	return s.Security.Authentication.JwtExpireHour
+}
+func (s *Setting) GetJwtHeaderPrefix() string {
+	return s.Security.Authentication.JwtHeaderPrefix
+}
+func (s *Setting) GetJwtIssuer() string {
+	return s.Security.Authentication.JwtIssuer
+}
+func (s *Setting) GetJwtVerifyIssuer() bool {
+	return s.Security.Authentication.JwtVerifyIssuer
+}
+func (s *Setting) GetJwtVerifyExpireHour() bool {
+	return s.Security.Authentication.JwtVerifyExpireHour
+}
+func (s *Setting) GetMigrationPath() string { return s.Webapp.MigrationPath }
+func (s *Setting) GetWebAppBaseURL() string { return s.Webapp.BaseURL }
+func (s *Setting) GetPageSize() int         { return s.Webapp.PageSize }
+func (s *Setting) GetCacheSize() int        { return s.Cache.Gcache.CacheSize }
+func (s *Setting) GetCacheTimeout() int     { return s.Cache.Gcache.Timeout }
+
+// GetWebAppMediaURL get web app media url
+func (s *Setting) GetWebAppMediaURL() string { return s.Webapp.MediaURL }
+
+// GetWebAppMediaPath get web app media path
+func (s *Setting) GetWebAppMediaPath() string { return s.Webapp.MediaPath }
+
+// GetWebAppStaticPath get web app static path
+func (s *Setting) GetWebAppStaticPath() string { return s.Webapp.StaticPath }
+
+// GetWebAppStaticURL get web app static url
+func (s *Setting) GetWebAppStaticURL() string { return s.Webapp.StaticURL }
+
 // GetLogRootPath get log root path
 func (s *Setting) GetLogRootPath() string {
 	return s.Log.LogRootPath
+}
+
+// GetTablePrefix get table prefix
+func (s *Setting) GetTablePrefix() string {
+	return s.Database.TablePrefix
+}
+
+// GetServiceMeshAutoRegister get auto register
+func (s *Setting) GetServiceMeshAutoRegister() bool {
+	return s.ServiceMesh.AutoRegister
 }
 
 // GetAtomicRequest get automic request is open
@@ -328,17 +438,16 @@ func (t *Trinity) GetConfigFilePath() string {
 	return r
 }
 
-// SetConfigFilePath  get rootpath
-func (t *Trinity) SetConfigFilePath(configFilePath string) *Trinity {
-	t.mu.Lock()
-	t.configFilePath = configFilePath
-	t.reloadTrinity()
-	t.mu.Unlock()
-	return t
+// GetCurrentSetting  get setting
+func (t *Trinity) GetCurrentSetting() ISetting {
+	t.mu.RLock()
+	s := t.setting
+	t.mu.RUnlock()
+	return s
 }
 
 // GetSetting  get setting
-func (t *Trinity) GetSetting() *Setting {
+func (t *Trinity) GetSetting() ISetting {
 	t.mu.RLock()
 	s := t.setting
 	t.mu.RUnlock()
@@ -346,7 +455,7 @@ func (t *Trinity) GetSetting() *Setting {
 }
 
 // SetSetting  set setting
-func (t *Trinity) SetSetting(s *Setting) *Trinity {
+func (t *Trinity) SetSetting(s ISetting) *Trinity {
 	t.mu.Lock()
 	t.setting = s
 	t.reloadTrinity()

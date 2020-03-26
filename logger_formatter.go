@@ -49,13 +49,13 @@ func DbLoggerFormatter(r *ViewSetRunTime, v ...interface{}) string {
 	dblogLevel, _ := v[0].(string)
 	l := &LogFormat{
 		Timestamp:  time.Now().Format(time.RFC3339),
-		Version:    GlobalTrinity.setting.Version,
+		Version:    GlobalTrinity.setting.GetProjectVersion(),
 		Message:    r.Gcontext.Errors.String(),
 		LoggerName: "",
 		ThreadName: "",
 		Level:      "",
 		Hostname:   "hostname",
-		ModuleName: GlobalTrinity.setting.Project,
+		ModuleName: GlobalTrinity.setting.GetProjectName(),
 		TraceID:    r.TraceID,
 		// Latency:        params.Latency,
 		ClientIP:       r.Gcontext.ClientIP(),

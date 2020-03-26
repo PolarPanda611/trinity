@@ -15,26 +15,27 @@ func (t *Trinity) initRouter() {
 	r := gin.New()
 	// r.Use(timeoutMiddleware(time.Second * 2))
 	r.Use(LogMiddleware())
-	if t.setting.Security.Cors.Enable {
+	if t.setting.GetCorsEnable() {
 		r.Use(cors.New(cors.Config{
-			AllowOrigins:     t.setting.Security.Cors.AllowOrigins,
-			AllowMethods:     t.setting.Security.Cors.AllowMethods,
-			AllowHeaders:     t.setting.Security.Cors.AllowHeaders,
-			ExposeHeaders:    t.setting.Security.Cors.ExposeHeaders,
-			AllowCredentials: t.setting.Security.Cors.AllowCredentials,
+			AllowOrigins:     t.setting.GetAllowOrigins(),
+			AllowMethods:     t.setting.GetAllowMethods(),
+			AllowHeaders:     t.setting.GetAllowHeaders(),
+			ExposeHeaders:    t.setting.GetExposeHeaders(),
+			AllowCredentials: t.setting.GetAllowCredentials(),
 			AllowOriginFunc: func(origin string) bool {
 				return origin == "http://github.com"
 			},
-			MaxAge: time.Duration(t.setting.Security.Cors.MaxAgeHour) * time.Hour,
+			MaxAge: time.Duration(t.setting.GetMaxAgeHour()) * time.Hour,
 		}))
+
 	}
 	// r.LoadHTMLGlob(t.setting.Webapp.TemplatePath)
 	r.RedirectTrailingSlash = false
 	r.Use(gin.Recovery())
-	r.Static(t.setting.Webapp.BaseURL+t.setting.Webapp.MediaURL, t.setting.Webapp.MediaPath)
-	r.Static(t.setting.Webapp.BaseURL+t.setting.Webapp.StaticURL, t.setting.Webapp.StaticPath)
-	r.GET(t.setting.Webapp.BaseURL+"/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	r.GET(t.setting.Webapp.BaseURL+"/api/ping", func(c *gin.Context) {
+	r.Static(t.setting.GetWebAppBaseURL()+t.setting.GetWebAppMediaURL(), t.setting.GetWebAppMediaPath())
+	r.Static(t.setting.GetWebAppBaseURL()+t.setting.GetWebAppStaticURL(), t.setting.GetWebAppStaticPath())
+	r.GET(t.setting.GetWebAppBaseURL()+"/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.GET(t.setting.GetWebAppBaseURL()+"/api/ping", func(c *gin.Context) {
 		err := GlobalTrinity.db.DB().Ping()
 		if err != nil {
 			c.AbortWithStatusJSON(400, gin.H{
@@ -42,7 +43,7 @@ func (t *Trinity) initRouter() {
 				"APIStatus":  "Error",
 				"DBStatus":   "Error",
 				"DBError":    err.Error(),
-				"APIVersion": t.setting.Version,
+				"APIVersion": t.setting.GetProjectVersion(),
 			})
 		} else {
 			c.JSON(200, gin.H{
@@ -50,7 +51,7 @@ func (t *Trinity) initRouter() {
 				"APIStatus":  "alive",
 				"DBStatus":   "alive",
 				"DBInfo":     GlobalTrinity.db.DB().Stats(),
-				"APIVersion": t.setting.Version,
+				"APIVersion": t.setting.GetProjectVersion(),
 			})
 		}
 	})
@@ -65,18 +66,9 @@ func (t *Trinity) GetRouter() *gin.Engine {
 	return r
 }
 
-// SetRouter  set router
-func (t *Trinity) SetRouter(newRouter *gin.Engine) *Trinity {
-	t.mu.Lock()
-	t.router = newRouter
-	t.reloadTrinity()
-	t.mu.Unlock()
-	return t
-}
-
 // NewAPIGroup register new apigroup
 func (t *Trinity) NewAPIGroup(path string) *gin.RouterGroup {
-	return t.router.Group(t.setting.Webapp.BaseURL + path)
+	return t.router.Group(t.setting.GetWebAppBaseURL() + path)
 }
 
 // NewAPIInGroup register new api in group

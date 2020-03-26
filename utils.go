@@ -200,13 +200,13 @@ func GetServiceID(projectName string, projectVersion string, ServiceIP string, S
 }
 
 // GetLogFromMetaData get log from metadata
-func GetLogFromMetaData(ctx context.Context) (method string, traceID string, userName string) {
+func GetLogFromMetaData(ctx context.Context) (GRPCMethod, TraceID, ReqUserName) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if ok {
-		method = md["method"][0]
-		traceID = md["trace_id"][0]
-		userName = md["current_user"][0]
-		return method, traceID, userName
+		method := md["method"][0]
+		traceID := md["trace_id"][0]
+		userName := md["current_user"][0]
+		return GRPCMethod(method), TraceID(traceID), ReqUserName(userName)
 	}
 	return "", "", ""
 

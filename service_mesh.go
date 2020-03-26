@@ -118,10 +118,12 @@ func NewEtcdRegister(address string, port int) (ServiceMesh, error) {
 	return s, nil
 }
 
+// GetClient get etcd client
 func (s *ServiceMeshEtcdImpl) GetClient() interface{} {
 	return s.client
 }
 
+// RegService register etcd service
 func (s *ServiceMeshEtcdImpl) RegService(projectName string, projectVersion string, serviceIP string, servicePort int, Tags []string, deregisterSecondAfterCritical int, interval int, tlsEnabled bool) error {
 	r := &etcdnaming.GRPCResolver{Client: s.client}
 	err := r.Update(context.TODO(), GetServiceName(projectName), naming.Update{Op: naming.Add, Addr: fmt.Sprintf("%v:%v", serviceIP, servicePort), Metadata: fmt.Sprintf("%v", Tags)})
@@ -130,6 +132,8 @@ func (s *ServiceMeshEtcdImpl) RegService(projectName string, projectVersion stri
 	}
 	return nil
 }
+
+// DeRegService deregister service
 func (s *ServiceMeshEtcdImpl) DeRegService(projectName string, projectVersion string, serviceIP string, servicePort int) error {
 	r := &etcdnaming.GRPCResolver{Client: s.client}
 	err := r.Update(context.TODO(), GetServiceName(projectName), naming.Update{Op: naming.Delete, Addr: fmt.Sprintf("%v:%v", serviceIP, servicePort)})

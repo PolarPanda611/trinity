@@ -35,7 +35,7 @@ func (v *ViewSetRunTime) Response() {
 		v.Gcontext.Error(v.RealError)
 		v.Gcontext.Error(v.UserError)
 		res.Result = v.UserError.Error()
-		if GlobalTrinity.GetSetting().Runtime.Debug {
+		if GlobalTrinity.GetSetting().GetDebug() {
 			res.Result = e
 		}
 		v.Db.Rollback()

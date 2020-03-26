@@ -55,7 +55,7 @@ func runMigrationFile(seq int, filepath string) error {
 // scan the migration file under static/migrations
 func RunMigration() {
 	var migrationError error
-	migrationsDirPath := filepath.Join(rootPath, GlobalTrinity.setting.Webapp.MigrationPath)
+	migrationsDirPath := filepath.Join(rootPath, GlobalTrinity.setting.GetMigrationPath())
 	fileInfoList, err := ioutil.ReadDir(migrationsDirPath)
 	if err != nil {
 		log.Fatal(err)
@@ -66,7 +66,7 @@ func RunMigration() {
 		return indexA < indexB
 	})
 	var currentMigSeq int
-	row := GlobalTrinity.db.Table(GlobalTrinity.setting.Database.TablePrefix+"migration").Where("status = ?", true).Select("MAX(seq)").Row()
+	row := GlobalTrinity.db.Table(GlobalTrinity.setting.GetTablePrefix()+"migration").Where("status = ?", true).Select("MAX(seq)").Row()
 	row.Scan(&currentMigSeq)
 	for i := range fileInfoList {
 		//0_filexxxx.sql

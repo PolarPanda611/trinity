@@ -23,13 +23,13 @@ func LogMiddleware() gin.HandlerFunc {
 		currentTimeString := currentTime.Format(time.RFC3339)
 		l := &LogFormat{
 			Timestamp:      currentTimeString,
-			Version:        GlobalTrinity.setting.Version,
+			Version:        GlobalTrinity.setting.GetProjectVersion(),
 			Message:        c.Errors.String(),
 			LoggerName:     "",
 			ThreadName:     "",
 			Level:          "",
 			Hostname:       "hostname",
-			ModuleName:     GlobalTrinity.setting.Project,
+			ModuleName:     GlobalTrinity.setting.GetProjectName(),
 			TraceID:        traceID,
 			Latency:        currentTime.Sub(start),
 			ClientIP:       c.ClientIP(),

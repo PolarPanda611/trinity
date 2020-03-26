@@ -198,7 +198,7 @@ func FilterByFilter(c *gin.Context, FilterByList []string, FilterCustomizeFunc m
 			filter := &FilterQuery{
 				QueryName:   queryName,
 				QueryValue:  queryValue,
-				tablePrefix: GlobalTrinity.setting.Database.TablePrefix,
+				tablePrefix: GlobalTrinity.setting.GetTablePrefix(),
 			}
 			filter.GetFilterQuerySQL()
 			if filter.ValueSQL == nil {

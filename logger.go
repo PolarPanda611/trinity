@@ -14,7 +14,7 @@ import (
 
 // Logger to record log
 type Logger interface {
-	FormatLogger(method string, traceID string, user string) Logger
+	FormatLogger(method GRPCMethod, traceID TraceID, reqUserName ReqUserName) Logger
 	Print(v ...interface{})
 }
 
@@ -32,16 +32,16 @@ type defaultLogger struct {
 	ProjectVersion string
 	WebAppAddress  string
 	WebAppPort     int
-	Method         string
-	TraceID        string
-	User           string
+	Method         GRPCMethod
+	TraceID        TraceID
+	reqUserName    ReqUserName
 }
 
-func (l *defaultLogger) FormatLogger(method string, traceID string, user string) Logger {
+func (l *defaultLogger) FormatLogger(method GRPCMethod, traceID TraceID, reqUserName ReqUserName) Logger {
 
 	l.Method = method
 	l.TraceID = traceID
-	l.User = user
+	l.reqUserName = reqUserName
 	// l.Logger = kitlog.With(l.Logger, "ServiceName", GetServiceName(l.ProjectName, l.ProjectVersion))
 	// l.Logger = kitlog.With(l.Logger, "Time", kitlog.DefaultTimestampUTC)
 	// l.Logger = kitlog.With(l.Logger, "Caller", kitlog.DefaultCaller)
@@ -62,7 +62,7 @@ func (l *defaultLogger) Print(v ...interface{}) {
 		"Caller=", kitlog.DefaultCaller(),
 		"Method=", l.Method,
 		"TraceID=", l.TraceID,
-		"User=", l.User,
+		"ReqUserName=", l.reqUserName,
 	}
 	if len(v) > 0 {
 		dblogLevel, _ := v[0].(string)
@@ -92,7 +92,7 @@ type defaultViewRuntimeLogger struct {
 	ViewRuntime *ViewSetRunTime
 }
 
-func (l *defaultViewRuntimeLogger) FormatLogger(method string, traceID string, user string) Logger {
+func (l *defaultViewRuntimeLogger) FormatLogger(method GRPCMethod, traceID TraceID, reqUseName ReqUserName) Logger {
 	return l
 }
 

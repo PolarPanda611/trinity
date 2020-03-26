@@ -17,51 +17,50 @@ import (
  */
 func (t *Trinity) InitDatabase() {
 	var dbconnection string
-	switch t.setting.Database.Type {
+	switch t.setting.GetDBType() {
 	case "mysql":
 		var dbconn strings.Builder
 		// 向builder中写入字符 / 字符串
-		dbconn.Write([]byte(t.setting.Database.User))
+		dbconn.Write([]byte(t.setting.GetDBUser()))
 		dbconn.WriteByte(':')
-		dbconn.Write([]byte(t.setting.Database.Password))
+		dbconn.Write([]byte(t.setting.GetDBPassword()))
 		dbconn.Write([]byte("@/"))
-		dbconn.Write([]byte(t.setting.Database.Name))
+		dbconn.Write([]byte(t.setting.GetDBName()))
 		dbconn.WriteByte('?')
-		dbconn.Write([]byte(t.setting.Database.Option))
+		dbconn.Write([]byte(t.setting.GetDBOption()))
 		dbconnection = dbconn.String()
 
 		break
 	case "postgres":
 		dbconnection = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s %s",
-			t.setting.Database.Host,
-			t.setting.Database.Port,
-			t.setting.Database.User,
-			t.setting.Database.Password,
-			t.setting.Database.Name,
-			t.setting.Database.Option,
+			t.setting.GetDBHost(),
+			t.setting.GetDBPort(),
+			t.setting.GetDBUser(),
+			t.setting.GetDBPassword(),
+			t.setting.GetDBName(),
+			t.setting.GetDBOption(),
 		)
 		break
 	}
-	db, err := gorm.Open(t.setting.Database.Type, dbconnection)
+	db, err := gorm.Open(t.setting.GetDBType(), dbconnection)
 
 	db.SetLogger(&NilLogger{})
 	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
-		return t.setting.Database.TablePrefix + defaultTableName
+		return t.setting.GetTablePrefix() + defaultTableName
 	}
 
 	if err != nil {
 		log.Fatalf("models.Setup err: %v", err)
 	}
-	db.LogMode(t.setting.Runtime.Debug)
+	db.LogMode(t.setting.GetDebug())
 	db.SingularTable(true)
 	db.Callback().Create().Replace("gorm:update_time_stamp", updateTimeStampAndUUIDForCreateCallback)
 	db.Callback().Update().Replace("gorm:update_time_stamp", updateTimeStampForUpdateCallback)
 	db.Callback().Delete().Replace("gorm:delete", deleteCallback)
 
-	db.DB().SetMaxIdleConns(t.setting.Database.DbMaxIdleConn)
-	db.DB().SetMaxOpenConns(t.setting.Database.DbMaxOpenConn)
+	db.DB().SetMaxIdleConns(t.setting.GetDbMaxIdleConn())
+	db.DB().SetMaxOpenConns(t.setting.GetDbMaxOpenConn())
 	t.db = db
-	t.context.db = db
 
 }
 
@@ -71,15 +70,6 @@ func (t *Trinity) GetDB() *gorm.DB {
 	d := t.db
 	t.mu.RUnlock()
 	return d
-}
-
-// SetDB  set db instance
-func (t *Trinity) SetDB(db *gorm.DB) *Trinity {
-	t.mu.Lock()
-	t.db = db
-	t.reloadTrinity()
-	t.mu.Unlock()
-	return t
 }
 
 // updateTimeStampForCreateCallback will set `CreatedOn`, `ModifiedOn` when creating

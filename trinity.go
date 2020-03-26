@@ -1,7 +1,6 @@
 package trinity
 
 import (
-	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -45,8 +44,7 @@ type Trinity struct {
 	configFilePath string
 
 	// COMMON
-	ctx              context.Context
-	setting          *Setting
+	setting          ISetting
 	customizeSetting CustomizeSetting
 	db               *gorm.DB
 	vCfg             *ViewSetCfg
@@ -56,7 +54,6 @@ type Trinity struct {
 
 	// GRPC
 	gServer *grpc.Server
-	context *Context
 
 	// HTTP
 	router *gin.Engine
@@ -98,25 +95,20 @@ func SetRunMode(runmode string) {
 
 // New app
 // initial global trinity object
-func New(ctx context.Context, customizeSetting ...CustomizeSetting) *Trinity {
+func New(customizeSetting ...CustomizeSetting) *Trinity {
 	t := &Trinity{
 		runMode:        runMode,
 		rootpath:       rootPath,
 		configFilePath: configFilePath,
-		ctx:            ctx,
-		context:        &Context{root: true},
 	}
 	t.mu.Lock()
 	t.setting = newSetting(t.runMode, t.configFilePath).GetSetting()
 	t.loadCustomizeSetting(customizeSetting...)
 	t.logger = initLogger(t.setting)
-	t.context.logger = initLogger(t.setting)
-	t.context.setting = t.setting
 	t.InitDatabase()
 	t.db.SetLogger(t.logger)
-	t.context.db.SetLogger(t.logger)
 
-	switch t.setting.Webapp.Type {
+	switch t.setting.GetWebAppType() {
 	case "HTTP":
 		t.initRouter()
 		t.initViewSetCfg()
@@ -129,7 +121,7 @@ func New(ctx context.Context, customizeSetting ...CustomizeSetting) *Trinity {
 		break
 	}
 
-	if t.setting.ServiceMesh.AutoRegister {
+	if t.setting.GetServiceMeshAutoRegister() {
 		switch t.setting.GetServiceMeshType() {
 		case "consul":
 			c, err := NewConsulRegister(
@@ -163,25 +155,10 @@ func New(ctx context.Context, customizeSetting ...CustomizeSetting) *Trinity {
 	return t
 }
 
-// Reload  reload trinity
-func (t *Trinity) Reload(runMode string) {
-	t.mu.RLock()
-	t.runMode = runMode
-	t.setting = newSetting(t.runMode, t.configFilePath).GetSetting()
-	t.logger = initLogger(t.setting)
-	t.context.logger = initLogger(t.setting)
-	t.InitDatabase()
-	t.initRouter()
-	t.initViewSetCfg()
-	t.initDefaultValue()
-	t.mu.RUnlock()
-}
-
 // reloadTrinity for reload some config
 func (t *Trinity) reloadTrinity() {
 	t.setting = newSetting(t.runMode, t.configFilePath).GetSetting()
 	t.logger = initLogger(t.setting)
-	t.context.logger = initLogger(t.setting)
 	t.InitDatabase()
 	t.initRouter()
 	t.initViewSetCfg()
@@ -192,14 +169,6 @@ func (t *Trinity) reloadTrinity() {
 func (t *Trinity) GetVCfg() *ViewSetCfg {
 	t.mu.RLock()
 	v := t.vCfg
-	t.mu.RUnlock()
-	return v
-}
-
-// NewContext  get context
-func (t *Trinity) NewContext() *Context {
-	t.mu.RLock()
-	v := t.context
 	t.mu.RUnlock()
 	return v
 }
@@ -292,7 +261,7 @@ func (t *Trinity) ServeGRPC() {
 			gErr <- err
 		}
 		// logger.Logger.Log("transport", "GRPC", "address", port, "msg", "listening")
-		t.logger.Print(fmt.Sprintf("[info] %v  start GRPC server listening : %v, version : %v", GetCurrentTimeString(time.RFC3339), t.setting.Webapp.Port, t.setting.Version))
+		t.logger.Print(fmt.Sprintf("[info] %v  start GRPC server listening : %v, version : %v", GetCurrentTimeString(time.RFC3339), t.setting.GetWebAppPort(), t.setting.GetProjectVersion()))
 		gErr <- t.gServer.Serve(lis)
 	}()
 
@@ -301,7 +270,7 @@ func (t *Trinity) ServeGRPC() {
 		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 		gErr <- fmt.Errorf("%s", <-c)
 	}()
-	t.logger.Print(fmt.Sprintf("[info] %v   GRPC server listening ended : %v, version : %v , %v ", GetCurrentTimeString(time.RFC3339), t.setting.Webapp.Port, t.setting.Version, <-gErr))
+	t.logger.Print(fmt.Sprintf("[info] %v   GRPC server listening ended : %v, version : %v , %v ", GetCurrentTimeString(time.RFC3339), t.setting.GetWebAppPort(), t.setting.GetProjectVersion(), <-gErr))
 	t.serviceMesh.DeRegService(
 		t.setting.GetProjectName(),
 		t.setting.GetProjectVersion(),
@@ -315,15 +284,15 @@ func (t *Trinity) ServeGRPC() {
 func (t *Trinity) ServeHTTP() {
 	defer t.Close()
 	s := &http.Server{
-		Addr:              fmt.Sprintf(":%v", t.setting.Webapp.Port),
+		Addr:              fmt.Sprintf(":%v", t.setting.GetWebAppPort()),
 		Handler:           t.router,
-		ReadTimeout:       time.Duration(t.setting.Webapp.ReadTimeoutSecond) * time.Second,
-		ReadHeaderTimeout: time.Duration(t.setting.Webapp.ReadHeaderTimeoutSecond) * time.Second,
-		WriteTimeout:      time.Duration(t.setting.Webapp.WriteTimeoutSecond) * time.Second,
-		IdleTimeout:       time.Duration(t.setting.Webapp.IdleTimeoutSecond) * time.Second,
-		MaxHeaderBytes:    t.setting.Webapp.MaxHeaderBytes,
+		ReadTimeout:       time.Duration(t.setting.GetReadTimeoutSecond()) * time.Second,
+		ReadHeaderTimeout: time.Duration(t.setting.GetReadHeaderTimeoutSecond()) * time.Second,
+		WriteTimeout:      time.Duration(t.setting.GetWriteTimeoutSecond()) * time.Second,
+		IdleTimeout:       time.Duration(t.setting.GetIdleTimeoutSecond()) * time.Second,
+		MaxHeaderBytes:    t.setting.GetMaxHeaderBytes(),
 	}
-	t.logger.Print(fmt.Sprintf("[info] %v  start http server listening : %v, version : %v", GetCurrentTimeString(time.RFC3339), t.setting.Webapp.Port, t.setting.Version))
+	t.logger.Print(fmt.Sprintf("[info] %v  start http server listening : %v, version : %v", GetCurrentTimeString(time.RFC3339), t.setting.GetWebAppPort(), t.setting.GetProjectVersion()))
 	s.ListenAndServe()
 	return
 }
@@ -346,5 +315,5 @@ func (t *Trinity) Serve() {
 // Close http
 func (t *Trinity) Close() {
 	t.db.Close()
-	t.logger.Print(fmt.Sprintf("[info] %v  end http server listening : %v, version : %v", GetCurrentTimeString(time.RFC3339), t.setting.Webapp.Port, t.setting.Version))
+	t.logger.Print(fmt.Sprintf("[info] %v  end http server listening : %v, version : %v", GetCurrentTimeString(time.RFC3339), t.setting.GetWebAppPort(), t.setting.GetProjectVersion()))
 }

@@ -21,13 +21,13 @@ func initDefaultCache(cacheAlgorithm string, cacheSize int, timeout int) gcache.
 }
 
 func (t *Trinity) initCache() {
-	t.cache = initDefaultCache("LRU", t.setting.Cache.Gcache.CacheSize, t.setting.Cache.Gcache.Timeout)
+	t.cache = initDefaultCache("LRU", t.setting.GetCacheSize(), t.setting.GetCacheTimeout())
 }
 
 // CleanCache clean the current cache
 func (t *Trinity) CleanCache() {
 	t.mu.Lock()
-	t.cache = initDefaultCache("LRU", t.setting.Cache.Gcache.CacheSize, t.setting.Cache.Gcache.Timeout)
+	t.cache = initDefaultCache("LRU", t.setting.GetCacheSize(), t.setting.GetCacheTimeout())
 	t.mu.Unlock()
 }
 

@@ -43,14 +43,14 @@ func LoggingInterceptor(log Logger) func(ctx context.Context, req interface{}, i
 		if _, ok := md["trace_id"]; !ok {
 			md.Append("trace_id", "")
 		}
-		if _, ok := md["current_user"]; !ok {
-			md.Append("current_user", "")
+		if _, ok := md["req_user_name"]; !ok {
+			md.Append("req_user_name", "")
 		}
 		resp, err := handler(ctx, req)
 		log.FormatLogger(
-			info.FullMethod,
-			md["trace_id"][0],
-			md["current_user"][0],
+			GRPCMethod(info.FullMethod),
+			TraceID(md["trace_id"][0]),
+			ReqUserName(md["req_user_name"][0]),
 		).Print("Req", fmt.Sprintf("%v", req), "Res", fmt.Sprintf("%v", resp), "Error", fmt.Sprintf("%v", err))
 		return resp, err
 	}
