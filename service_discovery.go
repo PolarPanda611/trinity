@@ -1,10 +1,14 @@
 package trinity
 
 import (
+	"context"
 	"fmt"
 	"time"
 
+	"github.com/coreos/etcd/clientv3"
+	etcdnaming "github.com/coreos/etcd/clientv3/naming"
 	consulapi "github.com/hashicorp/consul/api"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/resolver"
 )
 
@@ -108,4 +112,22 @@ func ConsulResolverInit(address string, serviceName string) error {
 	resolver.Register(crb)
 
 	return nil
+}
+
+// NewEtcdClientConn new etcd client connection
+func NewEtcdClientConn(address string, port int, serviceName string) (*grpc.ClientConn, error) {
+	cli, err := clientv3.NewFromURL(fmt.Sprintf("http://%v:%v", address, port))
+	if err != nil {
+		return nil, fmt.Errorf("failed to conn etcd client , %v", err)
+	}
+	r := &etcdnaming.GRPCResolver{Client: cli}
+	b := grpc.RoundRobin(r)
+
+	ctx1, cel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cel()
+	conn, err := grpc.DialContext(ctx1, serviceName, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithBalancer(b))
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
 }
