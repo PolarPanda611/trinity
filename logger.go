@@ -21,6 +21,12 @@ type Logger interface {
 // NilLogger nil logger
 type NilLogger struct{}
 
+// FormatLogger nil logger do noothing
+func (l *NilLogger) FormatLogger(method GRPCMethod, traceID TraceID, reqUserName ReqUserName) Logger {
+	return l
+
+}
+
 // Print nil logger do noothing
 func (l *NilLogger) Print(v ...interface{}) {
 

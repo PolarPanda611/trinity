@@ -27,21 +27,24 @@ var (
 	// GlobalTrinity global instance
 	GlobalTrinity  *Trinity
 	runMode        = "Local"
-	rootPath       string
-	configFilePath string
+	rootPath, _    = os.Getwd()
+	configFilePath = filepath.Join(rootPath, "config", "config.yml")
 )
 
-func init() {
-	rootPath, _ = os.Getwd()
-	configFilePath = filepath.Join(rootPath, "config", "config.yml")
+// SetRunMode  set RunMode
+func SetRunMode(runmode string) {
+	runMode = runmode
+}
+
+// SetConfigFilePath  get rootpath
+func SetConfigFilePath(path string) {
+	configFilePath = path
 }
 
 // Trinity struct for app subconfig
 type Trinity struct {
-	mu             sync.RWMutex
-	runMode        string
-	rootpath       string
-	configFilePath string
+	mu      sync.RWMutex
+	runMode string
 
 	// COMMON
 	setting          ISetting
@@ -59,51 +62,20 @@ type Trinity struct {
 	router *gin.Engine
 }
 
+// will be removed
 func (t *Trinity) initDefaultValue() {
 	GlobalTrinity = t
-}
-
-// GetRootPath  get rootpath
-func GetRootPath() string {
-	return rootPath
-}
-
-// SetRootPath  get rootpath
-func SetRootPath(path string) {
-	rootPath = path
-}
-
-// GetConfigFilePath  get rootpath
-func GetConfigFilePath() string {
-	return configFilePath
-}
-
-// SetConfigFilePath  get rootpath
-func SetConfigFilePath(path string) {
-	configFilePath = path
-}
-
-// GetRunMode  get RunMode
-func GetRunMode() string {
-	return runMode
-}
-
-// SetRunMode  set RunMode
-func SetRunMode(runmode string) {
-	runMode = runmode
 }
 
 // New app
 // initial global trinity object
 func New(customizeSetting ...CustomizeSetting) *Trinity {
 	t := &Trinity{
-		runMode:        runMode,
-		rootpath:       rootPath,
-		configFilePath: configFilePath,
+		runMode: runMode,
 	}
 	t.mu.Lock()
-	t.setting = newSetting(t.runMode, t.configFilePath).GetSetting()
-	t.loadCustomizeSetting(customizeSetting...)
+	t.setting = newSetting(t.runMode, configFilePath).GetSetting()
+
 	t.logger = initLogger(t.setting)
 	t.InitDatabase()
 	t.db.SetLogger(t.logger)
@@ -152,17 +124,8 @@ func New(customizeSetting ...CustomizeSetting) *Trinity {
 	t.initCache()
 	t.initDefaultValue()
 	t.mu.Unlock()
+	LoadCustomizeSetting(customizeSetting...)
 	return t
-}
-
-// reloadTrinity for reload some config
-func (t *Trinity) reloadTrinity() {
-	t.setting = newSetting(t.runMode, t.configFilePath).GetSetting()
-	t.logger = initLogger(t.setting)
-	t.InitDatabase()
-	t.initRouter()
-	t.initViewSetCfg()
-	t.initDefaultValue()
 }
 
 // GetVCfg  get vcfg
@@ -171,15 +134,6 @@ func (t *Trinity) GetVCfg() *ViewSetCfg {
 	v := t.vCfg
 	t.mu.RUnlock()
 	return v
-}
-
-// SetVCfg  get vcfg
-func (t *Trinity) SetVCfg(newVCfg *ViewSetCfg) *Trinity {
-	t.mu.Lock()
-	t.vCfg = newVCfg
-	t.reloadTrinity()
-	t.mu.Unlock()
-	return t
 }
 
 // GetLogger  get vcfg

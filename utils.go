@@ -205,7 +205,7 @@ func GetLogFromMetaData(ctx context.Context) (GRPCMethod, TraceID, ReqUserName) 
 	if ok {
 		method := md["method"][0]
 		traceID := md["trace_id"][0]
-		userName := md["current_user"][0]
+		userName := md["req_user_name"][0]
 		return GRPCMethod(method), TraceID(traceID), ReqUserName(userName)
 	}
 	return "", "", ""

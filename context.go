@@ -66,3 +66,8 @@ func (c *Context) GetTraceID() TraceID {
 func (c *Context) GetReqUserName() ReqUserName {
 	return c.reqUserName
 }
+
+// GetLogger get current user name
+func (c *Context) GetLogger() Logger {
+	return c.logger
+}

@@ -206,55 +206,115 @@ type Setting struct {
 	}
 }
 
+// GetDbMaxIdleConn get db max idle connection
 func (s *Setting) GetDbMaxIdleConn() int { return s.Database.DbMaxIdleConn }
-func (s *Setting) GetDbMaxOpenConn() int { return s.Database.DbMaxOpenConn }
-func (s *Setting) GetDBHost() string     { return s.Database.Host }
-func (s *Setting) GetDBPort() string     { return s.Database.Port }
-func (s *Setting) GetDBUser() string     { return s.Database.User }
-func (s *Setting) GetDBPassword() string { return s.Database.Password }
-func (s *Setting) GetDBName() string     { return s.Database.Name }
-func (s *Setting) GetDBOption() string   { return s.Database.Option }
-func (s *Setting) GetDBType() string     { return s.Database.Type }
 
-func (s *Setting) GetCorsEnable() bool        { return s.Security.Cors.Enable }
-func (s *Setting) GetMaxAgeHour() int         { return s.Security.Cors.MaxAgeHour }
-func (s *Setting) GetAllowOrigins() []string  { return s.Security.Cors.AllowOrigins }
-func (s *Setting) GetAllowMethods() []string  { return s.Security.Cors.AllowMethods }
-func (s *Setting) GetAllowHeaders() []string  { return s.Security.Cors.AllowHeaders }
+// GetDbMaxOpenConn get db max open connection
+func (s *Setting) GetDbMaxOpenConn() int { return s.Database.DbMaxOpenConn }
+
+// GetDBHost get db host
+func (s *Setting) GetDBHost() string { return s.Database.Host }
+
+// GetDBPort get db port
+func (s *Setting) GetDBPort() string { return s.Database.Port }
+
+// GetDBUser get db user
+func (s *Setting) GetDBUser() string { return s.Database.User }
+
+// GetDBPassword get db password
+func (s *Setting) GetDBPassword() string { return s.Database.Password }
+
+// GetDBName get schema name
+func (s *Setting) GetDBName() string { return s.Database.Name }
+
+// GetDBOption get db option
+func (s *Setting) GetDBOption() string { return s.Database.Option }
+
+// GetDBType get db type
+func (s *Setting) GetDBType() string { return s.Database.Type }
+
+// GetCorsEnable get if enable cors
+func (s *Setting) GetCorsEnable() bool { return s.Security.Cors.Enable }
+
+// GetMaxAgeHour get max age hour
+func (s *Setting) GetMaxAgeHour() int { return s.Security.Cors.MaxAgeHour }
+
+// GetAllowOrigins get allow origins
+func (s *Setting) GetAllowOrigins() []string { return s.Security.Cors.AllowOrigins }
+
+// GetAllowMethods get allow method
+func (s *Setting) GetAllowMethods() []string { return s.Security.Cors.AllowMethods }
+
+// GetAllowHeaders get allow headers
+func (s *Setting) GetAllowHeaders() []string { return s.Security.Cors.AllowHeaders }
+
+// GetExposeHeaders get expoose headers
 func (s *Setting) GetExposeHeaders() []string { return s.Security.Cors.ExposeHeaders }
+
+// GetAllowCredentials get allow credentials
 func (s *Setting) GetAllowCredentials() bool {
 	return s.Security.Cors.AllowCredentials
 }
 
-func (s *Setting) GetReadTimeoutSecond() int       { return s.Webapp.ReadTimeoutSecond }
+// GetReadTimeoutSecond get readtimeoout
+func (s *Setting) GetReadTimeoutSecond() int { return s.Webapp.ReadTimeoutSecond }
+
+// GetReadHeaderTimeoutSecond get GetReadHeaderTimeoutSecond
 func (s *Setting) GetReadHeaderTimeoutSecond() int { return s.Webapp.ReadHeaderTimeoutSecond }
-func (s *Setting) GetWriteTimeoutSecond() int      { return s.Webapp.WriteTimeoutSecond }
-func (s *Setting) GetIdleTimeoutSecond() int       { return s.Webapp.IdleTimeoutSecond }
-func (s *Setting) GetMaxHeaderBytes() int          { return s.Webapp.MaxHeaderBytes }
+
+// GetWriteTimeoutSecond get GetWriteTimeoutSecond
+func (s *Setting) GetWriteTimeoutSecond() int { return s.Webapp.WriteTimeoutSecond }
+
+// GetIdleTimeoutSecond get GetIdleTimeoutSecond
+func (s *Setting) GetIdleTimeoutSecond() int { return s.Webapp.IdleTimeoutSecond }
+
+// GetMaxHeaderBytes get GetMaxHeaderBytes
+func (s *Setting) GetMaxHeaderBytes() int { return s.Webapp.MaxHeaderBytes }
+
+// GetSecretKey get GetSecretKey
 func (s *Setting) GetSecretKey() string {
 	return s.Security.Authentication.SecretKey
 }
 
+// GetJwtExpireHour get GetJwtExpireHour
 func (s *Setting) GetJwtExpireHour() int {
 	return s.Security.Authentication.JwtExpireHour
 }
+
+// GetJwtHeaderPrefix get GetJwtHeaderPrefix
 func (s *Setting) GetJwtHeaderPrefix() string {
 	return s.Security.Authentication.JwtHeaderPrefix
 }
+
+// GetJwtIssuer get GetJwtIssuer
 func (s *Setting) GetJwtIssuer() string {
 	return s.Security.Authentication.JwtIssuer
 }
+
+// GetJwtVerifyIssuer get GetJwtVerifyIssuer
 func (s *Setting) GetJwtVerifyIssuer() bool {
 	return s.Security.Authentication.JwtVerifyIssuer
 }
+
+// GetJwtVerifyExpireHour get GetJwtVerifyExpireHour
 func (s *Setting) GetJwtVerifyExpireHour() bool {
 	return s.Security.Authentication.JwtVerifyExpireHour
 }
+
+// GetMigrationPath get GetMigrationPath
 func (s *Setting) GetMigrationPath() string { return s.Webapp.MigrationPath }
+
+// GetWebAppBaseURL get GetWebAppBaseURL
 func (s *Setting) GetWebAppBaseURL() string { return s.Webapp.BaseURL }
-func (s *Setting) GetPageSize() int         { return s.Webapp.PageSize }
-func (s *Setting) GetCacheSize() int        { return s.Cache.Gcache.CacheSize }
-func (s *Setting) GetCacheTimeout() int     { return s.Cache.Gcache.Timeout }
+
+// GetPageSize get GetPageSize
+func (s *Setting) GetPageSize() int { return s.Webapp.PageSize }
+
+// GetCacheSize get GetCacheSize
+func (s *Setting) GetCacheSize() int { return s.Cache.Gcache.CacheSize }
+
+// GetCacheTimeout get GetCacheTimeout
+func (s *Setting) GetCacheTimeout() int { return s.Cache.Gcache.Timeout }
 
 // GetWebAppMediaURL get web app media url
 func (s *Setting) GetWebAppMediaURL() string { return s.Webapp.MediaURL }
@@ -421,29 +481,13 @@ func (s *GlobalSetting) loadSetting(runMode string) ISetting {
 	return &currentSetting
 }
 
-// loadSetting used for load trinity config file by default and customize setting if necessery
-func (t *Trinity) loadCustomizeSetting(customizeSettingSlice ...CustomizeSetting) {
+// LoadCustomizeSetting used for load trinity config file by default and customize setting if necessery
+func LoadCustomizeSetting(customizeSettingSlice ...CustomizeSetting) {
 
 	// load customize setting for application
 	for _, v := range customizeSettingSlice {
-		v.Load(t.runMode, t.configFilePath)
+		v.Load(runMode, configFilePath)
 	}
-}
-
-// GetConfigFilePath  get rootpath
-func (t *Trinity) GetConfigFilePath() string {
-	t.mu.RLock()
-	r := t.configFilePath
-	t.mu.RUnlock()
-	return r
-}
-
-// GetCurrentSetting  get setting
-func (t *Trinity) GetCurrentSetting() ISetting {
-	t.mu.RLock()
-	s := t.setting
-	t.mu.RUnlock()
-	return s
 }
 
 // GetSetting  get setting
@@ -452,13 +496,4 @@ func (t *Trinity) GetSetting() ISetting {
 	s := t.setting
 	t.mu.RUnlock()
 	return s
-}
-
-// SetSetting  set setting
-func (t *Trinity) SetSetting(s ISetting) *Trinity {
-	t.mu.Lock()
-	t.setting = s
-	t.reloadTrinity()
-	t.mu.Unlock()
-	return t
 }
