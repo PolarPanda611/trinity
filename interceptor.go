@@ -12,7 +12,7 @@ import (
 )
 
 // LoggingInterceptor record log
-func LoggingInterceptor(log Logger) func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+func LoggingInterceptor(log Logger, setting ISetting) func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		if info.FullMethod == DefaultGRPCHealthCheck {
 			return handler(ctx, req)
@@ -26,11 +26,7 @@ func LoggingInterceptor(log Logger) func(ctx context.Context, req interface{}, i
 			md.Append(ReqUserNameKey, "")
 		}
 		resp, err := handler(ctx, req)
-		log.FormatLogger(
-			GRPCMethod(info.FullMethod),
-			TraceID(md[TraceIDKey][0]),
-			ReqUserName(md[ReqUserNameKey][0]),
-		).Print("Req", fmt.Sprintf("%v", req), "Res", fmt.Sprintf("%v", resp), "Error", fmt.Sprintf("%v", err))
+		NewDefaultLogger(NewUserRequestsCtx(ctx), setting).Print("Req", fmt.Sprintf("%v", req), "Res", fmt.Sprintf("%v", resp), "Error", fmt.Sprintf("%v", err))
 		return resp, err
 	}
 }

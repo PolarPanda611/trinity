@@ -1,7 +1,6 @@
 package trinity
 
 import (
-	"context"
 	"fmt"
 	"net"
 	"os"
@@ -14,7 +13,6 @@ import (
 	"github.com/bwmarrin/snowflake"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
-	"google.golang.org/grpc/metadata"
 )
 
 // RFC3339FullDate for rfc full date
@@ -197,17 +195,4 @@ func GetServiceName(projectName string) string {
 func GetServiceID(projectName string, projectVersion string, ServiceIP string, ServicePort int) string {
 	ServiceName := GetServiceName(projectName)
 	return fmt.Sprintf("%v-%v-%v-%v", ServiceName, projectVersion, ServiceIP, ServicePort)
-}
-
-// GetLogFromMetaData get log from metadata
-func GetLogFromMetaData(ctx context.Context) (GRPCMethod, TraceID, ReqUserName) {
-	md, ok := metadata.FromIncomingContext(ctx)
-	if ok {
-		method := md["method"][0]
-		traceID := md["trace_id"][0]
-		userName := md["req_user_name"][0]
-		return GRPCMethod(method), TraceID(traceID), ReqUserName(userName)
-	}
-	return "", "", ""
-
 }

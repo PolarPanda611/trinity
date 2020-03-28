@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net"
@@ -25,7 +26,9 @@ import (
 
 var (
 	// GlobalTrinity global instance
-	GlobalTrinity  *Trinity
+	GlobalTrinity *Trinity
+	// DefaultWriter  Default Writer
+	defaultWriter  io.Writer
 	runMode        = "Local"
 	rootPath, _    = os.Getwd()
 	configFilePath = filepath.Join(rootPath, "config", "config.yml")
@@ -34,6 +37,13 @@ var (
 // SetRunMode  set RunMode
 func SetRunMode(runmode string) {
 	runMode = runmode
+}
+
+// SetDefaultWriter set default writer for trinity
+func SetDefaultWriter(writer io.Writer) {
+	defaultWriter = writer
+	gin.DefaultWriter = writer
+
 }
 
 // SetConfigFilePath  get rootpath
@@ -76,7 +86,10 @@ func New(customizeSetting ...CustomizeSetting) *Trinity {
 	t.mu.Lock()
 	t.setting = newSetting(t.runMode, configFilePath).GetSetting()
 
-	t.logger = initLogger(t.setting)
+	if defaultWriter == nil {
+		defaultWriter = initLoggerWriter(t.setting)
+	}
+	t.logger = NewDefaultLogger(NewUserRequestsCtx(nil), t.setting)
 	t.InitDatabase()
 	t.db.SetLogger(t.logger)
 
@@ -168,7 +181,7 @@ func (t *Trinity) initGRPCServer() {
 			grpc.Creds(c),
 			grpc_middleware.WithUnaryServerChain(
 				RecoveryInterceptor(t.logger),
-				LoggingInterceptor(t.logger),
+				LoggingInterceptor(t.logger, t.setting),
 				UserAuthInterceptor(t.logger),
 			),
 		}
@@ -177,7 +190,7 @@ func (t *Trinity) initGRPCServer() {
 		opts := []grpc.ServerOption{
 			grpc_middleware.WithUnaryServerChain(
 				RecoveryInterceptor(t.logger),
-				LoggingInterceptor(t.logger),
+				LoggingInterceptor(t.logger, t.setting),
 				UserAuthInterceptor(t.logger),
 			),
 		}

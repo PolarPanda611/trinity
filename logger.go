@@ -14,18 +14,11 @@ import (
 
 // Logger to record log
 type Logger interface {
-	FormatLogger(method GRPCMethod, traceID TraceID, reqUserName ReqUserName) Logger
 	Print(v ...interface{})
 }
 
 // NilLogger nil logger
 type NilLogger struct{}
-
-// FormatLogger nil logger do noothing
-func (l *NilLogger) FormatLogger(method GRPCMethod, traceID TraceID, reqUserName ReqUserName) Logger {
-	return l
-
-}
 
 // Print nil logger do noothing
 func (l *NilLogger) Print(v ...interface{}) {
@@ -34,28 +27,17 @@ func (l *NilLogger) Print(v ...interface{}) {
 
 // defaultLogger: default logger
 type defaultLogger struct {
-	ProjectName    string
-	ProjectVersion string
-	WebAppAddress  string
-	WebAppPort     int
-	Method         GRPCMethod
-	TraceID        TraceID
-	reqUserName    ReqUserName
+	userRequestsCtx UserRequestsCtx
+	setting         ISetting
 }
 
-func (l *defaultLogger) FormatLogger(method GRPCMethod, traceID TraceID, reqUserName ReqUserName) Logger {
+// NewDefaultLogger new default logger
+func NewDefaultLogger(userRequestsCtx UserRequestsCtx, setting ISetting) Logger {
+	return &defaultLogger{
+		userRequestsCtx: userRequestsCtx,
+		setting:         setting,
+	}
 
-	l.Method = method
-	l.TraceID = traceID
-	l.reqUserName = reqUserName
-	// l.Logger = kitlog.With(l.Logger, "ServiceName", GetServiceName(l.ProjectName, l.ProjectVersion))
-	// l.Logger = kitlog.With(l.Logger, "Time", kitlog.DefaultTimestampUTC)
-	// l.Logger = kitlog.With(l.Logger, "Caller", kitlog.DefaultCaller)
-	// l.Logger = kitlog.With(l.Logger, "Method", method)
-	// l.Logger = kitlog.With(l.Logger, "TraceID", traceID)
-	// l.Logger = kitlog.With(l.Logger, "User", user)
-	return l
-	// logger.Log(v...)
 }
 
 // LogWriter log
@@ -63,17 +45,16 @@ func (l *defaultLogger) Print(v ...interface{}) {
 
 	var logInterface []interface{}
 	logInterface = []interface{}{
-		"ServiceName=", GetServiceName(l.ProjectName),
+		"ServiceName=", GetServiceName(l.setting.GetProjectName()),
 		"Time=", kitlog.DefaultTimestamp(),
 		"Caller=", kitlog.DefaultCaller(),
-		"Method=", l.Method,
-		"TraceID=", l.TraceID,
-		"ReqUserName=", l.reqUserName,
+		"Method=", l.userRequestsCtx.GetGRPCMethod(),
+		"TraceID=", l.userRequestsCtx.GetTraceID(),
+		"ReqUserName=", l.userRequestsCtx.GetReqUserName(),
 	}
 	if len(v) > 0 {
 		dblogLevel, _ := v[0].(string)
 		if dblogLevel == "sql" {
-			// fmt.Printf(fmt.Sprintf("logger %p , %v ", l, l.TraceID))
 			logInterface = append(logInterface, "DBRunningFile=")
 			logInterface = append(logInterface, fmt.Sprint(v[1]))
 			logInterface = append(logInterface, "DBRunningTime=")
@@ -98,18 +79,14 @@ type defaultViewRuntimeLogger struct {
 	ViewRuntime *ViewSetRunTime
 }
 
-func (l *defaultViewRuntimeLogger) FormatLogger(method GRPCMethod, traceID TraceID, reqUseName ReqUserName) Logger {
-	return l
-}
-
 // LogWriter log
 func (l *defaultViewRuntimeLogger) Print(v ...interface{}) {
 	log := DbLoggerFormatter(l.ViewRuntime, v...)
 	LogPrint(log)
 }
 
-// InitLogger initial logger
-func initLogger(setting ISetting) Logger {
+// initLoggerWriter initial logger file
+func initLoggerWriter(setting ISetting) io.Writer {
 	if setting.GetDebug() {
 		gin.SetMode("debug")
 	} else {
@@ -137,20 +114,14 @@ func initLogger(setting ISetting) Logger {
 				log.Fatalln("create log error：", err)
 			}
 		}
-		gin.DefaultWriter = io.MultiWriter(gFile)
+		return io.MultiWriter(gFile)
 
-	} else {
-		gin.DefaultWriter = io.MultiWriter(os.Stderr)
 	}
-	return &defaultLogger{
-		ProjectName:    setting.GetProjectName(),
-		ProjectVersion: setting.GetProjectVersion(),
-		WebAppAddress:  setting.GetWebAppAddress(),
-		WebAppPort:     setting.GetWebAppPort(),
-	}
+	return io.MultiWriter(os.Stderr)
+
 }
 
 // LogPrint customize log
 func LogPrint(v ...interface{}) {
-	fmt.Fprintln(gin.DefaultWriter, v...)
+	fmt.Fprintln(defaultWriter, v...)
 }

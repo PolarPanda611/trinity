@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/jinzhu/gorm"
+	"google.golang.org/grpc/metadata"
 )
 
 // GRPCMethod grpc method
@@ -15,59 +16,96 @@ type ReqUserName string
 // TraceID current request trace id
 type TraceID string
 
-// Context  context impl
-type Context struct {
-	db      *gorm.DB
-	logger  Logger
-	setting ISetting
-	root    bool
+// UserRequestsCtx handle user ctx from context
+type UserRequestsCtx interface {
+	GetGRPCMethod() GRPCMethod
+	GetTraceID() TraceID
+	GetReqUserName() ReqUserName
+}
 
-	//traceid
-	traceID TraceID
-
-	//ReqUserName
+// UserRequestsCtxImpl UserRequestsCtxImpl handler request ctx , extrace data from ctx
+type UserRequestsCtxImpl struct {
+	ctx         context.Context
+	method      GRPCMethod
 	reqUserName ReqUserName
+	traceID     TraceID
+}
+
+// GetGRPCMethod get grpc method
+func (u *UserRequestsCtxImpl) GetGRPCMethod() GRPCMethod { return u.method }
+
+// GetTraceID get trace id
+func (u *UserRequestsCtxImpl) GetTraceID() TraceID { return u.traceID }
+
+// GetReqUserName get request user
+func (u *UserRequestsCtxImpl) GetReqUserName() ReqUserName { return u.reqUserName }
+
+// NewUserRequestsCtx new user ctx
+func NewUserRequestsCtx(ctx context.Context) UserRequestsCtx {
+	if ctx != nil {
+		md, ok := metadata.FromIncomingContext(ctx)
+		if ok {
+			method := md[GRPCMethodKey][0]
+			traceID := md[TraceIDKey][0]
+			userName := md[ReqUserNameKey][0]
+			return &UserRequestsCtxImpl{
+				method:      GRPCMethod(method),
+				reqUserName: ReqUserName(userName),
+				traceID:     TraceID(traceID),
+			}
+		}
+	}
+	// no data carries in ctx
+	return &UserRequestsCtxImpl{
+		method:      "",
+		reqUserName: "",
+		traceID:     "",
+	}
+}
+
+// Context interface to get Req Context
+type Context interface {
+	GetDB() *gorm.DB
+	GetLogger() Logger
+	GetRequest() interface{}
+	GetResponse() interface{}
+}
+
+// ContextImpl  context impl
+type ContextImpl struct {
+	userRequestsCtx UserRequestsCtx
+	db              *gorm.DB
+	logger          Logger
+	setting         ISetting
+	request         interface{}
+	response        interface{}
 }
 
 // NewContext new  ctx
-func NewContext(ctx context.Context, db *gorm.DB, setting ISetting) *Context {
-	method, traceID, reqUserName := GetLogFromMetaData(ctx)
-	logger := &defaultLogger{
-		ProjectName:    setting.GetProjectName(),
-		ProjectVersion: setting.GetProjectVersion(),
-		WebAppAddress:  setting.GetWebAppAddress(),
-		WebAppPort:     setting.GetWebAppPort(),
-	}
-	logger.FormatLogger(method, traceID, reqUserName)
+func NewContext(db *gorm.DB, setting ISetting, userRequestsCtx UserRequestsCtx, logger Logger) Context {
 	newDB := db.New()
 	newDB.SetLogger(logger)
-	newContext := &Context{
-		logger:      logger,
-		db:          newDB,
-		setting:     setting,
-		traceID:     traceID,
-		reqUserName: reqUserName,
+	newContext := &ContextImpl{
+		userRequestsCtx: userRequestsCtx,
+		logger:          logger,
+		db:              newDB,
+		setting:         setting,
 	}
 	return newContext
 }
 
 // GetDB get db instance
-func (c *Context) GetDB() *gorm.DB {
+func (c *ContextImpl) GetDB() *gorm.DB {
 	return c.db
 }
 
-// GetTraceID get current trace id
-func (c *Context) GetTraceID() TraceID {
-
-	return c.traceID
-}
-
-// GetReqUserName get current user name
-func (c *Context) GetReqUserName() ReqUserName {
-	return c.reqUserName
-}
-
 // GetLogger get current user name
-func (c *Context) GetLogger() Logger {
+func (c *ContextImpl) GetLogger() Logger {
 	return c.logger
 }
+
+// GetRequest get user request data
+func (c *ContextImpl) GetRequest() interface{} { return c.request }
+
+// GetResponse get user response data
+func (c *ContextImpl) GetResponse() interface{} { return c.response }
