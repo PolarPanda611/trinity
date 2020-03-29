@@ -66,6 +66,7 @@ func NewUserRequestsCtx(ctx context.Context) UserRequestsCtx {
 // Context interface to get Req Context
 type Context interface {
 	GetDB() *gorm.DB
+	GetTXDB() *gorm.DB
 	GetLogger() Logger
 	GetRequest() interface{}
 	GetResponse() interface{}
@@ -96,6 +97,12 @@ func NewContext(db *gorm.DB, setting ISetting, userRequestsCtx UserRequestsCtx, 
 
 // GetDB get db instance
 func (c *ContextImpl) GetDB() *gorm.DB {
+	return c.db
+}
+
+// GetTXDB get db instance with transaction
+func (c *ContextImpl) GetTXDB() *gorm.DB {
+	c.db = c.db.Begin()
 	return c.db
 }
 
