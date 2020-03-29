@@ -92,8 +92,7 @@ func initLoggerWriter(setting ISetting) io.Writer {
 	} else {
 		gin.SetMode("release")
 	}
-	runmode := gin.Mode()
-	if runmode == "release" {
+	if setting.GetLogEnable() {
 		if !CheckFileIsExist(setting.GetLogRootPath()) {
 			if err := os.MkdirAll(setting.GetLogRootPath(), 770); err != nil {
 				log.Fatalln("create log root path error：", err)
@@ -114,8 +113,7 @@ func initLoggerWriter(setting ISetting) io.Writer {
 				log.Fatalln("create log error：", err)
 			}
 		}
-		return io.MultiWriter(gFile)
-
+		return io.MultiWriter(os.Stderr, gFile)
 	}
 	return io.MultiWriter(os.Stderr)
 

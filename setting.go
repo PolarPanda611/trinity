@@ -69,6 +69,7 @@ type ISetting interface {
 	GetDBType() string
 	GetDbMaxIdleConn() int
 	GetDbMaxOpenConn() int
+	GetLogEnable() bool
 }
 
 // CustomizeSetting for customize setting
@@ -166,6 +167,7 @@ type Setting struct {
 		BaseURL string `yaml:"baseurl"`
 	}
 	Log struct {
+		Enable      bool   `yaml:"enable"`
 		LogRootPath string `yaml:"logrootpath"` //   /var/log/mold
 		LogName     string `yaml:"logname"`     //  app.log
 	}
@@ -447,6 +449,11 @@ func (s *Setting) GetServiceMeshAddress() string {
 // GetServiceMeshPort get service mesh port
 func (s *Setting) GetServiceMeshPort() int {
 	return s.ServiceMesh.Port
+}
+
+// GetLogEnable get log enable
+func (s *Setting) GetLogEnable() bool {
+	return s.Log.Enable
 }
 
 // GlobalSetting : for trinity global setting
