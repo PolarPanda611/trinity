@@ -126,8 +126,10 @@ func CheckUnverifiedTokenValid(c *gin.Context) (*FedidClaims, error) {
 	if err != nil {
 		return nil, err
 	}
-	if !tokenClaims.StandardClaims.VerifyIssuer(GlobalTrinity.setting.GetJwtIssuer(), true) {
-		return nil, ErrTokenWrongIssuer
+	if GlobalTrinity.setting.GetJwtVerifyIssuer() {
+		if !tokenClaims.StandardClaims.VerifyIssuer(GlobalTrinity.setting.GetJwtIssuer(), true) {
+			return nil, ErrTokenWrongIssuer
+		}
 	}
 	return tokenClaims, nil
 }
