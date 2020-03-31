@@ -86,6 +86,7 @@ type ContextImpl struct {
 func NewContext(db *gorm.DB, setting ISetting, userRequestsCtx UserRequestsCtx, logger Logger) Context {
 	newDB := db.New()
 	newDB.SetLogger(logger)
+	newDB.Set("UserID", userRequestsCtx.GetReqUserName())
 	newContext := &ContextImpl{
 		userRequestsCtx: userRequestsCtx,
 		logger:          logger,

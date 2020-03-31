@@ -65,6 +65,9 @@ type Trinity struct {
 	cache            gcache.Cache
 	serviceMesh      ServiceMesh
 
+	srvPool  map[string]*sync.Pool
+	repoPool map[string]*sync.Pool
+
 	// GRPC
 	gServer *grpc.Server
 
