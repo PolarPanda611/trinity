@@ -140,6 +140,7 @@ func JwtUnverifiedAuthBackend(c *gin.Context) error {
 	if err != nil {
 		return err
 	}
+	c.Set("token_claims", tokenClaims)
 	c.Set("Username", tokenClaims.UID)
 	return nil
 
